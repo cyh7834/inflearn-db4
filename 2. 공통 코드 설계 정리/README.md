@@ -51,3 +51,45 @@ CREATE TABLE common_code (
 ```
 
 이 방식은 주문 상태만 관리할 때는 괜찮지만, 회원 등급, 결제 상태, 결제 수단이 추가되면 코드들이 한 테이블에 뒤섞인다. 더 큰 문제는 `CANCEL`처럼 여러 도메인에서 같은 코드값을 쓰고 싶을 때 PK 충돌이 발생한다는 점이다.
+
+### 그룹화 설계
+
+실무에서는 코드를 종류별로 분리하기 위해 그룹 코드 테이블과 상세 코드 테이블로 나눈다.
+
+```sql
+CREATE TABLE common_code_group (
+  group_code VARCHAR(50) PRIMARY KEY,
+  group_name VARCHAR(100) NOT NULL,
+  description VARCHAR(500),
+  use_yn CHAR(1) NOT NULL DEFAULT 'Y',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE common_code_detail (
+  group_code VARCHAR(50) NOT NULL,
+  code VARCHAR(50) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  description VARCHAR(500),
+  sort_order INT NOT NULL DEFAULT 0,
+  use_yn CHAR(1) NOT NULL DEFAULT 'Y',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (group_code, code),
+  FOREIGN KEY (group_code) REFERENCES common_code_group(group_code)
+);
+```
+
+주요 컬럼의 역할은 다음과 같다.
+
+| 컬럼 | 의미 |
+| --- | --- |
+| `group_code` | 코드 그룹 식별자. 예: `ORDER_STATUS`, `MEMBER_GRADE` |
+| `code` | 실제 코드값. 예: `ORDER`, `VIP`, `CARD` |
+| `name` | 화면 표시 이름 |
+| `description` | 코드 또는 그룹 설명 |
+| `sort_order` | 드롭다운이나 목록 표시 순서 |
+| `use_yn` | 사용 여부. 기존 데이터는 유지하면서 신규 선택지만 막을 때 사용 |
+| `created_at`, `updated_at` | 생성 및 수정 시각 |
+
+복합 PK를 `(group_code, code)`로 잡으면 서로 다른 그룹에서 같은 코드값을 사용할 수 있다. 예를 들어 `ORDER_STATUS / CANCEL`과 `PAYMENT_STATUS / CANCEL`이 동시에 존재할 수 있다.
