@@ -93,3 +93,41 @@ CREATE TABLE common_code_detail (
 | `created_at`, `updated_at` | 생성 및 수정 시각 |
 
 복합 PK를 `(group_code, code)`로 잡으면 서로 다른 그룹에서 같은 코드값을 사용할 수 있다. 예를 들어 `ORDER_STATUS / CANCEL`과 `PAYMENT_STATUS / CANCEL`이 동시에 존재할 수 있다.
+
+### 적용 예시
+
+주문 테이블에는 표시 이름이 아니라 코드값만 저장한다.
+
+```sql
+CREATE TABLE orders (
+  order_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  member_id BIGINT NOT NULL,
+  order_status VARCHAR(20) NOT NULL DEFAULT 'ORDER',
+  total_amount INT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+화면에서 주문 상태 이름이 필요하면 공통 코드 상세 테이블과 조인한다.
+
+```sql
+SELECT
+  o.order_id,
+  o.order_status,
+  c.name AS order_status_name,
+  o.total_amount
+FROM orders o
+JOIN common_code_detail c
+  ON c.group_code = 'ORDER_STATUS'
+ AND o.order_status = c.code;
+```
+
+드롭다운 목록은 특정 그룹만 조회한다.
+
+```sql
+SELECT code, name
+FROM common_code_detail
+WHERE group_code = 'ORDER_STATUS'
+  AND use_yn = 'Y'
+ORDER BY sort_order;
+```
