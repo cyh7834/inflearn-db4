@@ -131,3 +131,29 @@ WHERE group_code = 'ORDER_STATUS'
   AND use_yn = 'Y'
 ORDER BY sort_order;
 ```
+
+## 추가 속성 관리
+
+공통 코드에는 표시 이름 외에도 할인율, 수수료율, 무료배송 여부 같은 속성이 붙을 수 있다.
+
+### 방법 1. 범용 속성 컬럼 추가
+
+속성이 적고 비교적 고정적이면 `attr1`, `attr2`, `attr3` 같은 범용 컬럼을 추가할 수 있다.
+
+```sql
+ALTER TABLE common_code_detail
+ADD COLUMN attr1 VARCHAR(100),
+ADD COLUMN attr2 VARCHAR(100),
+ADD COLUMN attr3 VARCHAR(100);
+```
+
+단점은 `attr1`이 어떤 의미인지 그룹마다 달라질 수 있다는 점이다. 이를 보완하려면 그룹 테이블에 속성 이름을 함께 둔다.
+
+```sql
+ALTER TABLE common_code_group
+ADD COLUMN attr1_name VARCHAR(50),
+ADD COLUMN attr2_name VARCHAR(50),
+ADD COLUMN attr3_name VARCHAR(50);
+```
+
+예를 들어 `MEMBER_GRADE`의 `attr1`은 할인율, `PAYMENT_METHOD`의 `attr1`은 수수료율로 해석할 수 있다.
