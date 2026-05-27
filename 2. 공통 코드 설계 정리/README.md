@@ -187,3 +187,16 @@ ADD COLUMN attr3_name VARCHAR(50);
 ### 불필요한 데이터 전송
 
 어떤 화면은 코드값만 필요하고, 어떤 화면은 코드 이름까지 필요하다. 범용 SQL 하나로 처리하면 필요 없는 이름 컬럼까지 조회하고, SQL을 나누면 비슷한 쿼리가 중복된다.
+
+## 해결 방안 1. 애플리케이션 매핑
+
+SQL에서는 코드값만 조회하고, 애플리케이션에서 공통 코드 목록을 별도로 가져와 `Map` 형태로 변환한다.
+
+```java
+String getCodeName(String groupCode, String code);
+
+order.statusName = code.getCodeName("ORDER_STATUS", order.status);
+order.gradeName = code.getCodeName("MEMBER_GRADE", order.grade);
+```
+
+장점은 SQL이 단순해지고 코드 이름 변환 로직을 중앙화할 수 있다는 점이다. 단점은 요청마다 공통 코드를 조회하면 추가 쿼리와 네트워크 호출이 생긴다는 점이다. 각 행마다 코드를 개별 조회하면 N+1 문제가 발생할 수 있다.
