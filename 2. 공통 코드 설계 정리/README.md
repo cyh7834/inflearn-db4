@@ -208,3 +208,19 @@ order.gradeName = code.getCodeName("MEMBER_GRADE", order.grade);
 - 데이터 양이 작다. 보통 수백 건 수준이다.
 - 변경이 드물다. 일주일에 몇 번 바뀌면 많은 편이다.
 - 조회가 빈번하다. 거의 모든 화면에서 사용된다.
+
+### 로컬 캐시
+
+애플리케이션 시작 시 공통 코드를 모두 메모리에 올려두고, 이후에는 DB 조회 없이 메모리에서 이름을 찾는다.
+
+```java
+class CommonCodeCache {
+  private Map<String, Map<String, String>> cache;
+
+  String getName(String groupCode, String code) {
+    return cache.get(groupCode).get(code);
+  }
+}
+```
+
+공통 코드 수백 건은 메모리 사용량이 매우 작기 때문에 부담이 거의 없다.
