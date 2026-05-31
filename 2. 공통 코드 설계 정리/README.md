@@ -237,3 +237,24 @@ class CommonCodeCache {
 | 모든 서버에 갱신 요청 | 서버별 캐시 갱신 가능 | 서버 목록 관리와 실패 처리가 복잡하다 |
 | Redis 중앙 캐시 | 동기화가 쉽다 | Redis 조회도 네트워크 호출이다 |
 | 로컬 캐시 + TTL | 빠르고 자동 동기화 가능 | TTL 기간만큼 반영 지연이 있다 |
+
+### 권장 전략: 로컬 캐시 + TTL
+
+문서의 권장 방향은 로컬 메모리 캐시에 TTL(Time To Live)을 두는 방식이다.
+
+```java
+class CommonCodeCache {
+  private Map<String, Map<String, String>> cache;
+  private DateTime lastLoadTime;
+  private int ttlSeconds = 60;
+
+  String getName(String groupCode, String code) {
+    if (isExpired()) {
+      refresh();
+    }
+    return cache.get(groupCode).get(code);
+  }
+}
+```
+
+일반적으로 60초 TTL이면 충분하다. 빠른 반영이 필요하면 10~30초, 변경이 거의 없으면 300초 이상도 가능하다. 캐시는 직접 구현하기보다 언어나 프레임워크에서 검증된 캐시 라이브러리를 사용하는 것이 좋다.
