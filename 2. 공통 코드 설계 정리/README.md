@@ -284,3 +284,33 @@ class CommonCodeCache {
 - 단순 드롭다운 목록
 
 이 경우 운영자가 항목이나 표시 이름을 바꿀 수 있는 유연성이 더 중요하다.
+
+### ENUM을 쓰기 좋은 경우
+
+코드값에 따라 `if`, `switch` 같은 비즈니스 분기가 일어나면 ENUM을 사용한다.
+
+문자열을 직접 쓰면 다음 문제가 생긴다.
+
+- 오타가 컴파일 단계에서 잡히지 않는다.
+- 코드 변경 시 문자열 검색에 의존해야 한다.
+- IDE 자동 완성을 받을 수 없다.
+- 아무 문자열이나 들어갈 수 있어 타입 안전성이 없다.
+
+ENUM을 사용하면 오타를 컴파일 타임에 잡고, 리팩토링과 자동 완성의 도움을 받을 수 있다.
+
+```java
+public enum OrderStatus {
+  ORDER,
+  PAID,
+  SHIPPING,
+  DELIVERED,
+  CANCEL
+}
+```
+
+DB에는 보통 ENUM 이름을 문자열로 저장한다.
+
+```java
+String statusCode = order.status.name();          // ENUM -> 문자열
+OrderStatus status = OrderStatus.valueOf(code);   // 문자열 -> ENUM
+```
