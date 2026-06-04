@@ -314,3 +314,7 @@ DB에는 보통 ENUM 이름을 문자열로 저장한다.
 String statusCode = order.status.name();          // ENUM -> 문자열
 OrderStatus status = OrderStatus.valueOf(code);   // 문자열 -> ENUM
 ```
+
+### ENUM만 쓸 때의 한계
+
+ENUM에 표시 이름이나 할인율 같은 속성을 함께 넣으면 운영 변경 때마다 애플리케이션을 다시 빌드하고 배포해야 한다. 단순한 표시 이름 변경이나 VIP 할인율 변경도 배포 대상이 되므로 운영 유연성이 떨어진다.
