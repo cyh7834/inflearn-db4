@@ -318,3 +318,28 @@ OrderStatus status = OrderStatus.valueOf(code);   // 문자열 -> ENUM
 ### ENUM만 쓸 때의 한계
 
 ENUM에 표시 이름이나 할인율 같은 속성을 함께 넣으면 운영 변경 때마다 애플리케이션을 다시 빌드하고 배포해야 한다. 단순한 표시 이름 변경이나 VIP 할인율 변경도 배포 대상이 되므로 운영 유연성이 떨어진다.
+
+## 하이브리드 전략
+
+하이브리드 전략은 ENUM과 공통 코드 테이블을 함께 사용한다. 코드값은 두 곳에 중복으로 유지하되 역할을 나눈다.
+
+| 역할 | ENUM | 공통 코드 테이블 |
+| --- | --- | --- |
+| 코드값 정의 | O | O |
+| 비즈니스 로직 | O | X |
+| 타입 안전성 | O | X |
+| 표시 이름 | X | O |
+| 추가 속성 | X | O |
+| 운영 중 변경 | X | O |
+
+핵심은 다음과 같다.
+
+- ENUM은 코드값 정의와 비즈니스 로직의 안전성을 담당한다.
+- 공통 코드 테이블은 표시 이름, 다국어 이름, 할인율, 수수료율 같은 운영 속성을 담당한다.
+- 화면 표시 시에는 ENUM의 `name()`으로 코드값을 얻고, 공통 코드 캐시에서 이름을 조회한다.
+
+```java
+String getStatusDisplayName(OrderStatus status) {
+  return CommonCodeCache.getName("ORDER_STATUS", status.name());
+}
+```
