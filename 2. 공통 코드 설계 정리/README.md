@@ -377,3 +377,25 @@ String getStatusDisplayName(OrderStatus status) {
    그렇다면 ENUM과 공통 코드 테이블을 함께 쓰는 하이브리드 전략을 사용한다.
 
 처음부터 모든 것을 하이브리드로 만들 필요는 없다. 비즈니스 로직에 필요하면 우선 ENUM으로 단순하게 시작하고, 운영 과정에서 표시 이름이나 속성 변경 요구가 잦아지면 하이브리드로 확장하는 편이 현실적이다.
+
+## 공통 코드 설계와 비즈니스 테이블 설계의 차이
+
+### 공통 코드에 자연키를 쓰는 이유
+
+일반적인 회원, 주문 같은 비즈니스 테이블은 `BIGINT AUTO_INCREMENT` 대리키를 쓰는 것이 좋다. 반면 공통 코드는 `ORDER`, `SHIPPING`, `CANCEL`처럼 코드값 자체가 의미를 가진다.
+
+공통 코드에 숫자 ID를 쓰면 주문 테이블에 `order_status_id = 10` 같은 값만 남는다. 이 값만 보고는 의미를 알 수 없어서 항상 조인이 필요하다.
+
+문자열 코드를 쓰면 DB를 직접 조회해도 의미를 바로 이해할 수 있다.
+
+```sql
+SELECT order_id, order_status FROM orders;
+```
+
+| `order_id` | `order_status` |
+| --- | --- |
+| 1 | `ORDER` |
+| 2 | `SHIPPING` |
+| 3 | `CANCEL` |
+
+또한 애플리케이션 ENUM과 DB 코드값을 맞추기 쉬워 별도 숫자 매핑 로직을 줄일 수 있다.
