@@ -50,3 +50,25 @@
 - 각 행은 `parent_id`를 가진다.
 - `parent_id`는 같은 테이블의 PK를 참조한다.
 - 최상위 루트 노드는 부모가 없으므로 `parent_id`가 `NULL`이다.
+
+### 테이블 설계
+
+```sql
+CREATE TABLE category (
+  category_id BIGINT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  parent_id BIGINT NULL,
+  PRIMARY KEY (category_id),
+  FOREIGN KEY (parent_id) REFERENCES category(category_id)
+);
+```
+
+컬럼의 의미는 다음과 같다.
+
+| 컬럼 | 의미 |
+| --- | --- |
+| `category_id` | 카테고리 고유 식별자 |
+| `name` | 카테고리 이름 |
+| `parent_id` | 부모 카테고리 ID. 같은 테이블의 `category_id`를 참조 |
+
+`parent_id`가 자기 자신의 테이블을 참조하므로 자기 참조(Self-Referencing) 관계라고 부른다.
