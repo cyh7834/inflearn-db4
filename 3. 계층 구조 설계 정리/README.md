@@ -72,3 +72,29 @@ CREATE TABLE category (
 | `parent_id` | 부모 카테고리 ID. 같은 테이블의 `category_id`를 참조 |
 
 `parent_id`가 자기 자신의 테이블을 참조하므로 자기 참조(Self-Referencing) 관계라고 부른다.
+
+### 기본 조회
+
+루트 카테고리는 `parent_id IS NULL`로 조회한다.
+
+```sql
+SELECT *
+FROM category
+WHERE parent_id IS NULL;
+```
+
+특정 카테고리의 직속 자식은 `parent_id`로 조회한다.
+
+```sql
+SELECT *
+FROM category
+WHERE parent_id = 1;
+```
+
+특정 카테고리의 부모는 셀프 조인으로 조회한다.
+
+```sql
+SELECT p.*
+FROM category c
+JOIN category p ON c.parent_id = p.category_id
+WHERE c.category_id = 7;
