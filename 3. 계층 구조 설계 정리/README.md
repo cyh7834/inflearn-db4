@@ -98,3 +98,30 @@ SELECT p.*
 FROM category c
 JOIN category p ON c.parent_id = p.category_id
 WHERE c.category_id = 7;
+```
+
+### 장점
+
+인접 리스트 모델의 장점은 다음과 같다.
+
+- 구조가 직관적이다. 부모-자식 관계를 외래 키 하나로 표현한다.
+- 노드 추가가 간단하다. 새 행을 넣고 `parent_id`만 지정하면 된다.
+- 노드 이동이 쉽다. `parent_id`만 바꾸면 된다.
+- 저장 공간이 효율적이다. 노드 하나당 행 하나만 저장한다.
+- 외래 키 제약조건으로 부모 참조 무결성을 보장할 수 있다.
+
+```sql
+-- 새로운 카테고리 추가
+INSERT INTO category (name, parent_id)
+VALUES ('게이밍노트북', 7);
+
+-- 카테고리 이동
+UPDATE category
+SET parent_id = 6
+WHERE category_id = 7;
+
+-- 자식이 없는 카테고리 삭제
+DELETE FROM category
+WHERE category_id = 17;
+```
+
