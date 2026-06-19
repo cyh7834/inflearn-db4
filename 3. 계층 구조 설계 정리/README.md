@@ -152,3 +152,23 @@ SELECT * FROM category WHERE parent_id IN (7, 8, 9, 10, 11, 12, 13);
 ```
 
 구현은 쉽지만 계층 깊이만큼 쿼리가 필요하다. 깊이가 10단계라면 최소 10번의 DB 호출이 필요하고, 네트워크 비용이 커진다.
+
+### 방법 2. JOIN을 사용한 고정 깊이 조회
+
+계층 최대 깊이가 정해져 있다면 여러 번 셀프 조인을 할 수 있다.
+
+```sql
+SELECT
+  c1.category_id AS level1_id,
+  c1.name AS level1_name,
+  c2.category_id AS level2_id,
+  c2.name AS level2_name,
+  c3.category_id AS level3_id,
+  c3.name AS level3_name
+FROM category c1
+LEFT JOIN category c2 ON c2.parent_id = c1.category_id
+LEFT JOIN category c3 ON c3.parent_id = c2.category_id
+WHERE c1.category_id = 1;
+```
+
+한 번의 쿼리로 처리할 수 있지만 깊이가 고정되어 있어야 한다. 깊이가 늘어나면 JOIN도 계속 늘어나고, 결과가 중복 행처럼 펼쳐져 후처리가 필요하다.
