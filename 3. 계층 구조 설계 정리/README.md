@@ -172,3 +172,29 @@ WHERE c1.category_id = 1;
 ```
 
 한 번의 쿼리로 처리할 수 있지만 깊이가 고정되어 있어야 한다. 깊이가 늘어나면 JOIN도 계속 늘어나고, 결과가 중복 행처럼 펼쳐져 후처리가 필요하다.
+
+### 방법 3. UNION ALL을 사용한 조회
+
+각 레벨별 쿼리를 작성하고 `UNION ALL`로 합칠 수도 있다.
+
+```sql
+SELECT category_id, name, parent_id, 1 AS level
+FROM category
+WHERE category_id = 1
+
+UNION ALL
+
+SELECT category_id, name, parent_id, 2 AS level
+FROM category
+WHERE parent_id = 1
+
+UNION ALL
+
+SELECT c.category_id, c.name, c.parent_id, 3 AS level
+FROM category c
+WHERE c.parent_id IN (
+  SELECT category_id FROM category WHERE parent_id = 1
+);
+```
+
+이 방식도 계층 깊이만큼 `UNION ALL`을 추가해야 하므로 가변 깊이에 대응하기 어렵다.
