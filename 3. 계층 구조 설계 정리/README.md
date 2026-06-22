@@ -208,3 +208,23 @@ WHERE c.parent_id IN (
 | `UNION ALL` | 레벨별 분리 가능 | 깊이 고정, 쿼리 복잡 |
 
 실무의 계층 구조는 깊이가 고정되지 않는 경우가 많다. 상품 카테고리는 3단계일 수도 있고 10단계일 수도 있다. 댓글은 대댓글, 대대댓글처럼 깊이를 예측하기 어렵다. 이런 경우 재귀 쿼리가 필요하다.
+
+## CTE와 재귀 쿼리
+
+CTE(Common Table Expression)는 쿼리 안에서 임시로 사용할 수 있는 이름 있는 결과 집합이다. `WITH` 절로 정의하며, 해당 SQL 안에서만 존재하는 임시 뷰처럼 사용할 수 있다.
+
+```sql
+WITH top_categories AS (
+  SELECT *
+  FROM category
+  WHERE parent_id IS NULL
+)
+SELECT *
+FROM top_categories;
+```
+
+CTE의 장점은 다음과 같다.
+
+- 쿼리 가독성이 좋아진다.
+- 같은 결과 집합을 여러 번 참조할 수 있다.
+- 재귀 쿼리를 작성할 수 있다.
