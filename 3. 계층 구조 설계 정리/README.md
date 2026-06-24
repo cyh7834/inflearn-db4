@@ -264,3 +264,37 @@ FROM cte_name;
 4. 지금까지의 모든 결과를 합쳐 반환한다.
 
 MySQL은 8.0부터 재귀 CTE를 지원한다.
+
+## 재귀 CTE 활용
+
+### 모든 자손 조회
+
+`전자제품(category_id = 1)`과 그 아래 모든 하위 카테고리를 조회하는 예시이다.
+
+```sql
+WITH RECURSIVE descendants AS (
+  -- 기본 케이스: 시작 노드
+  SELECT category_id, name, parent_id, 1 AS depth
+  FROM category
+  WHERE category_id = 1
+
+  UNION ALL
+
+  -- 재귀 케이스: 이전 결과의 자식 조회
+  SELECT c.category_id, c.name, c.parent_id, d.depth + 1
+  FROM category c
+  JOIN descendants d ON c.parent_id = d.category_id
+)
+SELECT *
+FROM descendants;
+```
+
+핵심은 재귀 케이스의 `JOIN descendants` 부분이다. 이전 단계에서 찾은 노드들을 부모로 삼아 다시 자식을 찾는다.
+
+자손 조회의 조인 조건은 다음과 같다.
+
+```sql
+c.parent_id = d.category_id
+```
+
+즉, 자식의 `parent_id`가 현재 노드의 `category_id`와 같은 행을 찾는다.
