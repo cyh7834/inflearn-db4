@@ -298,3 +298,33 @@ c.parent_id = d.category_id
 ```
 
 즉, 자식의 `parent_id`가 현재 노드의 `category_id`와 같은 행을 찾는다.
+
+### 모든 조상 조회
+
+반대로 `노트북(category_id = 7)`의 모든 조상을 조회할 수도 있다.
+
+```sql
+WITH RECURSIVE ancestors AS (
+  -- 기본 케이스: 시작 노드
+  SELECT category_id, name, parent_id, 1 AS depth
+  FROM category
+  WHERE category_id = 7
+
+  UNION ALL
+
+  -- 재귀 케이스: 부모를 찾아 올라감
+  SELECT c.category_id, c.name, c.parent_id, a.depth + 1
+  FROM category c
+  JOIN ancestors a ON c.category_id = a.parent_id
+)
+SELECT *
+FROM ancestors;
+```
+
+조상 조회의 조인 조건은 다음과 같다.
+
+```sql
+c.category_id = a.parent_id
+```
+
+즉, 현재 노드의 `parent_id`와 같은 `category_id`를 가진 부모를 찾는다.
