@@ -328,3 +328,31 @@ c.category_id = a.parent_id
 ```
 
 즉, 현재 노드의 `parent_id`와 같은 `category_id`를 가진 부모를 찾는다.
+
+### 특정 깊이까지만 조회
+
+재귀 CTE에 조건을 추가하면 특정 깊이까지만 조회할 수 있다.
+
+```sql
+WITH RECURSIVE descendants AS (
+  SELECT category_id, name, parent_id, 1 AS depth
+  FROM category
+  WHERE category_id = 1
+
+  UNION ALL
+
+  SELECT c.category_id, c.name, c.parent_id, d.depth + 1
+  FROM category c
+  JOIN descendants d ON c.parent_id = d.category_id
+  WHERE d.depth < 2
+)
+SELECT *
+FROM descendants;
+```
+
+2단계까지만 조회하고 싶을 때 조건은 `d.depth < 2`이다. 이 조건은 새로 만들어질 자식이 아니라, 현재 부모 역할을 하는 `d`의 깊이를 검사한다.
+
+- `d.depth < 2`: 깊이 1인 부모까지만 자식을 찾는다. 결과는 깊이 2까지 생성된다.
+- `d.depth <= 2`: 깊이 2인 부모도 자식을 찾으므로 결과가 깊이 3까지 생성된다.
+
+재귀 쿼리에서 깊이를 제한할 때는 "원하는 깊이보다 작은 부모까지만 재귀한다"는 관점으로 조건을 작성해야 한다.
