@@ -356,3 +356,42 @@ FROM descendants;
 - `d.depth <= 2`: 깊이 2인 부모도 자식을 찾으므로 결과가 깊이 3까지 생성된다.
 
 재귀 쿼리에서 깊이를 제한할 때는 "원하는 깊이보다 작은 부모까지만 재귀한다"는 관점으로 조건을 작성해야 한다.
+
+### 경로 문자열 만들기
+
+전체 경로를 문자열로 만들면 빵 부스러기(Breadcrumb) 네비게이션에 활용할 수 있다.
+
+```sql
+WITH RECURSIVE category_path AS (
+  -- 기본 케이스: 루트 카테고리
+  SELECT
+    category_id,
+    name,
+    parent_id,
+    name AS path
+  FROM category
+  WHERE parent_id IS NULL
+
+  UNION ALL
+
+  -- 재귀 케이스: 부모 경로 뒤에 현재 이름 추가
+  SELECT
+    c.category_id,
+    c.name,
+    c.parent_id,
+    CONCAT(cp.path, ' > ', c.name)
+  FROM category c
+  JOIN category_path cp ON c.parent_id = cp.category_id
+)
+SELECT category_id, name, path
+FROM category_path
+ORDER BY path;
+```
+
+결과 예시는 다음과 같은 형태가 된다.
+
+```text
+전자제품 > 컴퓨터 > 노트북
+전자제품 > 스마트폰 > 애플
+의류 > 남성의류 > 셔츠
+```
