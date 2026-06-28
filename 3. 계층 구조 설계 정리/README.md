@@ -395,3 +395,30 @@ ORDER BY path;
 전자제품 > 스마트폰 > 애플
 의류 > 남성의류 > 셔츠
 ```
+
+### 카테고리별 상품 수 집계
+
+실무에서는 특정 카테고리와 그 하위 카테고리에 속한 상품 수를 집계해야 하는 경우가 많다.
+
+먼저 특정 카테고리의 모든 자손 ID를 재귀 CTE로 구한다.
+
+```sql
+WITH RECURSIVE descendants AS (
+  SELECT category_id
+  FROM category
+  WHERE category_id = 1
+
+  UNION ALL
+
+  SELECT c.category_id
+  FROM category c
+  JOIN descendants d ON c.parent_id = d.category_id
+)
+SELECT COUNT(*) AS product_count
+FROM product
+WHERE category_id IN (
+  SELECT category_id FROM descendants
+);
+```
+
+이 방식으로 `전자제품` 자체와 모든 하위 카테고리에 속한 상품 수를 한 번에 계산할 수 있다.
