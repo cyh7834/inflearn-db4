@@ -452,3 +452,56 @@ WHERE category_id IN (
 ```
 
 핵심 아이디어는 조회 시점의 재귀 연산을 저장 시점으로 옮기는 것이다. 저장할 때 경로를 미리 계산해두면, 조회할 때는 재귀 없이 단순 조인만으로 결과를 얻을 수 있다.
+
+## 폐쇄 테이블 설계
+
+폐쇄 테이블 모델에는 두 테이블이 필요하다.
+
+- 노드 테이블: 실제 카테고리 데이터를 저장한다.
+- 경로 테이블: 모든 조상-자손 관계와 거리(`depth`)를 저장한다.
+
+```sql
+CREATE TABLE category_closure (
+  category_id BIGINT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  PRIMARY KEY (category_id)
+);
+
+CREATE TABLE category_path (
+  ancestor_id BIGINT NOT NULL,
+  descendant_id BIGINT NOT NULL,
+  depth INT NOT NULL,
+  PRIMARY KEY (ancestor_id, descendant_id),
+  FOREIGN KEY (ancestor_id) REFERENCES category_closure(category_id),
+  FOREIGN KEY (descendant_id) REFERENCES category_closure(category_id)
+);
+
+CREATE INDEX idx_descendant ON category_path(descendant_id);
+CREATE INDEX idx_depth ON category_path(depth);
+```
+
+`category_path`의 컬럼 의미는 다음과 같다.
+
+| 컬럼 | 의미 |
+| --- | --- |
+| `ancestor_id` | 조상 노드 ID |
+| `descendant_id` | 자손 노드 ID |
+| `depth` | 두 노드 사이 거리. 자기 자신은 0, 직속 관계는 1 |
+
+경로 테이블에는 자기 자신에 대한 경로도 반드시 저장한다.
+
+```sql
+INSERT INTO category_path VALUES (1, 1, 0);
+INSERT INTO category_path VALUES (2, 2, 0);
+```
+
+예를 들어 `전자제품(1)` 아래에 `컴퓨터(2)`, `노트북(4)`이 있다면 다음 관계가 저장된다.
+
+| `ancestor_id` | `descendant_id` | `depth` |
+| --- | --- | --- |
+| 1 | 1 | 0 |
+| 1 | 2 | 1 |
+| 1 | 4 | 2 |
+| 2 | 2 | 0 |
+| 2 | 4 | 1 |
+| 4 | 4 | 0 |
