@@ -505,3 +505,18 @@ INSERT INTO category_path VALUES (2, 2, 0);
 | 2 | 2 | 0 |
 | 2 | 4 | 1 |
 | 4 | 4 | 0 |
+
+## 폐쇄 테이블 조회
+
+### 모든 자손 조회
+
+특정 조상의 모든 자손은 `ancestor_id`로 조회한다.
+
+```sql
+SELECT *
+FROM category_closure c
+JOIN category_path p ON c.category_id = p.descendant_id
+WHERE p.ancestor_id = 1;
+```
+
+재귀 없이 단순 조인만 사용하므로 매우 빠르다.
