@@ -520,3 +520,14 @@ WHERE p.ancestor_id = 1;
 ```
 
 재귀 없이 단순 조인만 사용하므로 매우 빠르다.
+
+### 모든 조상 조회
+
+특정 자손의 모든 조상은 `descendant_id`로 조회한다.
+
+```sql
+SELECT *
+FROM category_closure c
+JOIN category_path p ON c.category_id = p.ancestor_id
+WHERE p.descendant_id = 4;
+```
