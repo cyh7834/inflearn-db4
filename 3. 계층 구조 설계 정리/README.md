@@ -531,3 +531,15 @@ FROM category_closure c
 JOIN category_path p ON c.category_id = p.ancestor_id
 WHERE p.descendant_id = 4;
 ```
+
+### 직속 자식 조회
+
+직속 자식만 필요하면 `depth = 1` 조건을 추가한다.
+
+```sql
+SELECT *
+FROM category_closure c
+JOIN category_path p ON c.category_id = p.descendant_id
+WHERE p.ancestor_id = 1
+  AND p.depth = 1;
+```
