@@ -543,3 +543,15 @@ JOIN category_path p ON c.category_id = p.descendant_id
 WHERE p.ancestor_id = 1
   AND p.depth = 1;
 ```
+
+### 특정 깊이까지만 조회
+
+깊이 조건을 사용하면 특정 단계까지만 조회할 수 있다.
+
+```sql
+SELECT c.*, p.depth
+FROM category_closure c
+JOIN category_path p ON c.category_id = p.descendant_id
+WHERE p.ancestor_id = 1
+  AND p.depth <= 2;
+```
