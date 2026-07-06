@@ -555,3 +555,29 @@ JOIN category_path p ON c.category_id = p.descendant_id
 WHERE p.ancestor_id = 1
   AND p.depth <= 2;
 ```
+
+## 폐쇄 테이블 데이터 조작
+
+폐쇄 테이블은 조회는 빠르지만 추가, 삭제, 이동이 복잡하다.
+
+### 노드 추가
+
+새 노드를 추가할 때는 노드 테이블뿐 아니라 경로 테이블도 갱신해야 한다.
+
+```sql
+-- 노트북(id=4) 아래에 게이밍노트북(id=8) 추가
+INSERT INTO category_closure (category_id, name)
+VALUES (8, '게이밍노트북');
+
+-- 자기 자신 경로
+INSERT INTO category_path
+VALUES (8, 8, 0);
+
+-- 부모의 모든 조상과 새 노드 사이의 경로 추가
+INSERT INTO category_path (ancestor_id, descendant_id, depth)
+SELECT ancestor_id, 8, depth + 1
+FROM category_path
+WHERE descendant_id = 4;
+```
+
+이렇게 하면 `전자제품 -> 게이밍노트북`, `컴퓨터 -> 게이밍노트북`, `노트북 -> 게이밍노트북`, `게이밍노트북 -> 게이밍노트북` 경로가 모두 저장된다.
