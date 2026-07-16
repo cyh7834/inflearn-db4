@@ -34,3 +34,65 @@
 - "언제부터 회원 등급이 이렇게 되어 있었나요?"
 
 이런 질문에 답하려면 데이터의 변경 과정을 기록해야 한다. 그렇지 않으면 현재 값만 남고, 무엇이 어떻게 바뀌었는지 추적할 수 없다.
+
+### 실습 예제
+
+가장 단순한 상품 테이블로 시작한다. 이력 관리를 전혀 하지 않는 형태다.
+
+```sql
+DROP TABLE IF EXISTS product;
+CREATE TABLE product (
+    product_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+);
+```
+
+샘플 데이터를 넣는다.
+
+```sql
+INSERT INTO product (name, price, stock_quantity, status)
+VALUES ('스마트폰 케이스', 15000, 100, 'ACTIVE');
+INSERT INTO product (name, price, stock_quantity, status)
+VALUES ('무선 이어폰', 89000, 50, 'ACTIVE');
+INSERT INTO product (name, price, stock_quantity, status)
+VALUES ('노트북 파우치', 35000, 30, 'ACTIVE');
+```
+
+조회하면 현재 상태만 나온다.
+
+```sql
+SELECT * FROM product;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | stock_quantity | status |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 15000 | 100 | ACTIVE |
+| 2 | 무선 이어폰 | 89000 | 50 | ACTIVE |
+| 3 | 노트북 파우치 | 35000 | 30 | ACTIVE |
+
+이제 15,000원인 스마트폰 케이스의 가격을 12,000원으로 내린다.
+
+```sql
+UPDATE product
+SET price = 12000
+WHERE product_id = 1;
+```
+
+변경 후 조회하면 값이 바뀌어 있다.
+
+```sql
+SELECT * FROM product WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | stock_quantity | status |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 12000 | 100 | ACTIVE |
+
+가격이 15,000에서 12,000으로 바뀌었다. 그러나 여기서 문제가 생긴다.
