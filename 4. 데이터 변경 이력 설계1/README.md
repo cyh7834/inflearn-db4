@@ -129,3 +129,38 @@ WHERE product_id = 1;
 현재 가격 12,000만 알 수 있고, 고객이 문의한 어제 시점의 가격 15,000원은 알 수 없다. 이 값을 확인하려면 변경 이력을 남겨야 한다.
 
 이 네 가지 질문을 하나씩 해결하기 위해 이 문서에서는 변경 추적 컬럼을 단계적으로 추가한다. 가장 단순한 형태부터 시작해 점점 확장해 나간다.
+
+## 변경 추적 컬럼 - 기본
+
+가장 먼저 적용할 수 있는 것은 테이블에 변경 추적 컬럼을 추가하는 것이다. "누가, 언제" 생성하고 수정했는지를 기록한다.
+
+### 기본 컬럼 추가
+
+기존 컬럼에 더해 변경 추적 컬럼 4개를 추가한다.
+
+```sql
+DROP TABLE IF EXISTS product;
+CREATE TABLE product (
+    product_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    -- 변경 추적 컬럼
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100) NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_by VARCHAR(100) NOT NULL
+);
+```
+
+각 컬럼의 의미는 다음과 같다.
+
+| 컬럼 | 의미 |
+| --- | --- |
+| `created_at` | 데이터가 처음 생성된 시각 |
+| `created_by` | 데이터를 처음 만든 사람(또는 시스템) |
+| `updated_at` | 데이터가 마지막으로 수정된 시각 |
+| `updated_by` | 데이터를 마지막으로 수정한 사람(또는 시스템) |
+
+`created_at`은 `DEFAULT CURRENT_TIMESTAMP`로 생성 시각을 자동으로 채우고, `updated_at`은 `ON UPDATE CURRENT_TIMESTAMP`로 행이 수정될 때마다 자동으로 갱신된다.
