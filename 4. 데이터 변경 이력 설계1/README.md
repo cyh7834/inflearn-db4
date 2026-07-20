@@ -164,3 +164,37 @@ CREATE TABLE product (
 | `updated_by` | 데이터를 마지막으로 수정한 사람(또는 시스템) |
 
 `created_at`은 `DEFAULT CURRENT_TIMESTAMP`로 생성 시각을 자동으로 채우고, `updated_at`은 `ON UPDATE CURRENT_TIMESTAMP`로 행이 수정될 때마다 자동으로 갱신된다.
+
+### 데이터 등록
+
+데이터를 등록할 때 생성자와 수정자를 함께 넣는다.
+
+```sql
+INSERT INTO product (name, price, stock_quantity, status, created_by, updated_by)
+VALUES ('스마트폰 케이스', 15000, 100, 'ACTIVE', 'admin_kim', 'admin_kim');
+INSERT INTO product (name, price, stock_quantity, status, created_by, updated_by)
+VALUES ('무선 이어폰', 89000, 50, 'ACTIVE', 'admin_lee', 'admin_lee');
+INSERT INTO product (name, price, stock_quantity, status, created_by, updated_by)
+VALUES ('노트북 파우치', 35000, 30, 'ACTIVE', 'admin_kim', 'admin_kim');
+```
+
+등록된 데이터를 조회한다.
+
+```sql
+SELECT product_id, name, price, created_at, created_by, updated_at, updated_by
+FROM product;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | created_at | created_by | updated_at | updated_by |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 15000 | 2026-01-15 10:00:00 | admin_kim | 2026-01-15 10:00:00 | admin_kim |
+| 2 | 무선 이어폰 | 89000 | 2026-01-15 10:05:00 | admin_lee | 2026-01-15 10:05:00 | admin_lee |
+| 3 | 노트북 파우치 | 35000 | 2026-01-15 10:10:00 | admin_kim | 2026-01-15 10:10:00 | admin_kim |
+
+이제 누가, 언제 만들었는지 알 수 있다.
+
+생성 직후에는 `created_at`과 `updated_at`이 같은 값을 가진다. 처음에는 생성과 수정이 동시에 일어난 것으로 취급되기 때문이다.
+
+> 참고: 등록 시점에 수정일(`updated_at`)을 `NULL`로 두면 "이 행은 한 번도 수정된 적이 없다"를 구분할 수 있다는 장점이 있다. 다만 수정일이 `NULL`이면 정렬이나 조회 시 매번 `COALESCE(updated_at, created_at)` 같은 처리가 필요하다. 등록 시점을 '0번째 수정'으로 간주해 `created_at`과 같은 값을 채워 두는 것이 조회는 편하다. 어느 쪽을 택할지는 팀의 정책으로 정한다.
