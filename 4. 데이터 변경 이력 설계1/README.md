@@ -274,3 +274,33 @@ WHERE product_id = 1;
 - "특정 고객사 전용 가격을 적용한 건가요?"
 
 이런 질문에 답하려면 변경 사유를 남겨야 한다.
+
+### 변경 사유 컬럼 추가
+
+기본 추적 컬럼에 변경 사유를 담는 컬럼을 추가한다.
+
+```sql
+DROP TABLE IF EXISTS product;
+CREATE TABLE product (
+    product_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    -- 기본 변경 추적 컬럼
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100) NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_by VARCHAR(100) NOT NULL,
+    -- 변경 사유 컬럼
+    change_type VARCHAR(50),
+    change_reason VARCHAR(500)
+);
+```
+
+추가된 컬럼의 의미는 다음과 같다.
+
+| 컬럼 | 의미 |
+| --- | --- |
+| `change_type` | 변경 유형 (예: PRICE_CHANGE, STATUS_CHANGE, STOCK_ADJUST 등) |
+| `change_reason` | 변경 사유 (자유 형식의 텍스트) |
