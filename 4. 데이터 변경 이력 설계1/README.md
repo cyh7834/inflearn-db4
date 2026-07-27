@@ -304,3 +304,26 @@ CREATE TABLE product (
 | --- | --- |
 | `change_type` | 변경 유형 (예: PRICE_CHANGE, STATUS_CHANGE, STOCK_ADJUST 등) |
 | `change_reason` | 변경 사유 (자유 형식의 텍스트) |
+
+### 데이터 등록
+
+데이터를 등록할 때는 변경 유형을 `'CREATE'`로 한다.
+
+```sql
+INSERT INTO product (name, price, stock_quantity, status, created_by, updated_by, change_type, change_reason)
+VALUES ('스마트폰 케이스', 15000, 100, 'ACTIVE', 'admin_kim', 'admin_kim', 'CREATE', '신규 상품 등록');
+INSERT INTO product (name, price, stock_quantity, status, created_by, updated_by, change_type, change_reason)
+VALUES ('무선 이어폰', 89000, 50, 'ACTIVE', 'admin_lee', 'admin_lee', 'CREATE', '신규 상품 등록');
+```
+
+```sql
+SELECT product_id, name, price, change_type, change_reason, updated_by
+FROM product;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | change_type | change_reason | updated_by |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 15000 | CREATE | 신규 상품 등록 | admin_kim |
+| 2 | 무선 이어폰 | 89000 | CREATE | 신규 상품 등록 | admin_lee |
