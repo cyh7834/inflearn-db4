@@ -327,3 +327,30 @@ FROM product;
 | --- | --- | --- | --- | --- | --- |
 | 1 | 스마트폰 케이스 | 15000 | CREATE | 신규 상품 등록 | admin_kim |
 | 2 | 무선 이어폰 | 89000 | CREATE | 신규 상품 등록 | admin_lee |
+
+### 가격 변경 - 할인 이벤트
+
+할인 이벤트로 가격을 내린다.
+
+```sql
+UPDATE product
+SET price = 12000,
+    updated_by = 'admin_park',
+    change_type = 'PRICE_CHANGE',
+    change_reason = '봄 시즌 할인 이벤트 (2026-03-01 ~ 2026-03-31)'
+WHERE product_id = 1;
+```
+
+```sql
+SELECT product_id, name, price, change_type, change_reason
+FROM product
+WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | change_type | change_reason |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 12000 | PRICE_CHANGE | 봄 시즌 할인 이벤트 (2026-03-01 ~ 2026-03-31) |
+
+이제 왜 가격이 바뀌었는지 알 수 있다.
