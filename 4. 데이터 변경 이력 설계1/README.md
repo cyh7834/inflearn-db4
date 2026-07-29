@@ -354,3 +354,28 @@ WHERE product_id = 1;
 | 1 | 스마트폰 케이스 | 12000 | PRICE_CHANGE | 봄 시즌 할인 이벤트 (2026-03-01 ~ 2026-03-31) |
 
 이제 왜 가격이 바뀌었는지 알 수 있다.
+
+### 재고 조정
+
+재고를 실사한 후 수량을 조정한다.
+
+```sql
+UPDATE product
+SET stock_quantity = 95,
+    updated_by = 'warehouse_kim',
+    change_type = 'STOCK_ADJUST',
+    change_reason = '실물 재고 실사 결과 5개 손실 확인'
+WHERE product_id = 1;
+```
+
+```sql
+SELECT product_id, name, stock_quantity, change_type, change_reason
+FROM product
+WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| product_id | name | stock_quantity | change_type | change_reason |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 95 | STOCK_ADJUST | 실물 재고 실사 결과 5개 손실 확인 |
