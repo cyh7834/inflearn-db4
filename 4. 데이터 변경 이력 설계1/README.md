@@ -379,3 +379,28 @@ WHERE product_id = 1;
 | product_id | name | stock_quantity | change_type | change_reason |
 | --- | --- | --- | --- | --- |
 | 1 | 스마트폰 케이스 | 95 | STOCK_ADJUST | 실물 재고 실사 결과 5개 손실 확인 |
+
+### 상태 변경 - 판매 중지
+
+상품을 판매 중지 상태로 바꾼다.
+
+```sql
+UPDATE product
+SET status = 'INACTIVE',
+    updated_by = 'admin_lee',
+    change_type = 'STATUS_CHANGE',
+    change_reason = '판매사 계약 종료로 판매 중지'
+WHERE product_id = 2;
+```
+
+```sql
+SELECT product_id, name, status, change_type, change_reason
+FROM product;
+```
+
+**[실행 결과]**
+
+| product_id | name | status | change_type | change_reason |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | ACTIVE | STOCK_ADJUST | 실물 재고 실사 결과 5개 손실 확인 |
+| 2 | 무선 이어폰 | INACTIVE | STATUS_CHANGE | 판매사 계약 종료로 판매 중지 |
