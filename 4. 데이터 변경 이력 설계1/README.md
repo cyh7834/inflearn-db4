@@ -404,3 +404,17 @@ FROM product;
 | --- | --- | --- | --- | --- |
 | 1 | 스마트폰 케이스 | ACTIVE | STOCK_ADJUST | 실물 재고 실사 결과 5개 손실 확인 |
 | 2 | 무선 이어폰 | INACTIVE | STATUS_CHANGE | 판매사 계약 종료로 판매 중지 |
+
+### 변경 유형 표준화
+
+`change_type`은 자유롭게 쓰기보다 미리 정한 코드값으로 표준화하는 것이 좋다. 예시는 다음과 같다.
+
+| change_type | 설명 |
+| --- | --- |
+| CREATE | 신규 등록 |
+| PRICE_CHANGE | 가격 변경 |
+| STOCK_ADJUST | 재고 조정 |
+| STATUS_CHANGE | 상태 변경 |
+| INFO_UPDATE | 정보 수정 (이름, 설명 등) |
+| PROMOTION | 프로모션 적용 |
+| CORRECTION | 오류 정정 |
