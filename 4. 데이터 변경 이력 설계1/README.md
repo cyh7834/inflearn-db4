@@ -418,3 +418,37 @@ FROM product;
 | INFO_UPDATE | 정보 수정 (이름, 설명 등) |
 | PROMOTION | 프로모션 적용 |
 | CORRECTION | 오류 정정 |
+
+### change_type과 change_reason을 나누는 이유
+
+변경 사유를 `change_reason` 하나에 자유 텍스트로만 담을 수도 있다. 그런데 별도로 `change_type`을 두는 이유는 **데이터 활용과 검색의 효율성** 때문이다.
+
+**1. 컴퓨터가 이해하기 쉬운 데이터 (표준화된 코드)**
+
+`change_reason`은 사람이 읽기 위한 것이라 표현이 제각각이다. "가격 변경", "할인 적용", "금액 조정" 등 사람마다 다르게 적을 수 있다. 이런 경우 자유 텍스트만으로는 같은 '가격 변경' 작업인지 판별하기 어렵다. 반면 `change_type`은 `PRICE_CHANGE`처럼 코드로 통일되므로 시스템이 정확하게 분류할 수 있다.
+
+**2. 통계와 집계에 유용**
+
+예를 들어 "올해 가격 변경이 총 몇 번 있었나"를 집계할 때, `change_type`이 없으면 자유 텍스트를 뒤져야 한다.
+
+`change_type`이 없을 때(비효율적):
+
+```sql
+SELECT * FROM product
+WHERE change_reason LIKE '%가격%'
+   OR change_reason LIKE '%할인%'
+   OR change_reason LIKE '%조정%';
+```
+
+이 방식은 검색 조건이 장황하고, 오타가 있거나 다른 표현을 쓴 경우 누락될 위험이 있다.
+
+`change_type`이 있을 때(효율적):
+
+```sql
+SELECT * FROM product
+WHERE change_type = 'PRICE_CHANGE';
+```
+
+한 가지 조건으로 명확하게 조회할 수 있고 결과도 정확하다.
+
+정리하면 `change_reason`은 **사람을 위한 상세 설명**으로, `change_type`은 **시스템을 위한 분류 코드**로 나눠 쓰는 것이 실무적으로 좋은 설계다.
