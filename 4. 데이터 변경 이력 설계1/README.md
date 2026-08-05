@@ -487,3 +487,36 @@ WHERE change_type = 'PRICE_CHANGE';
 4. **모바일 앱**: 앱을 통한 수정
 
 문제가 생겼을 때 "어디서 발생했는지"를 알아야 원인을 좁히고 빠르게 대응할 수 있다.
+
+### 감사 컬럼 추가
+
+기존 컬럼에 감사 컬럼을 추가한다.
+
+```sql
+DROP TABLE IF EXISTS product;
+CREATE TABLE product (
+    product_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    -- 기본 변경 추적 컬럼
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100) NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_by VARCHAR(100) NOT NULL,
+    -- 변경 사유 컬럼
+    change_type VARCHAR(50),
+    change_reason VARCHAR(500),
+    -- 감사(Audit) 컬럼
+    source_system VARCHAR(50),
+    client_ip VARCHAR(50)
+);
+```
+
+추가된 감사 컬럼의 의미는 다음과 같다.
+
+| 컬럼 | 의미 |
+| --- | --- |
+| `source_system` | 변경이 발생한 시스템 (예: WEB_ADMIN, API, BATCH, MOBILE 등) |
+| `client_ip` | 요청이 발생한 클라이언트 IP 주소 |
