@@ -520,3 +520,34 @@ CREATE TABLE product (
 | --- | --- |
 | `source_system` | 변경이 발생한 시스템 (예: WEB_ADMIN, API, BATCH, MOBILE 등) |
 | `client_ip` | 요청이 발생한 클라이언트 IP 주소 |
+
+### 데이터 등록 - 웹 관리자 화면
+
+관리자가 웹 관리자 화면에서 상품을 등록하는 경우다.
+
+```sql
+INSERT INTO product (
+    name, price, stock_quantity, status,
+    created_by, updated_by,
+    change_type, change_reason,
+    source_system, client_ip
+) VALUES (
+    '스마트폰 케이스', 15000, 100, 'ACTIVE',
+    'admin_kim', 'admin_kim',
+    'CREATE', '신규 상품 등록',
+    'WEB_ADMIN', '192.168.1.3'
+);
+```
+
+```sql
+SELECT product_id, name, price, source_system, client_ip
+FROM product;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | source_system | client_ip |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 15000 | WEB_ADMIN | 192.168.1.3 |
+
+`source_system`이 `WEB_ADMIN`으로, 웹 관리자 화면에서 등록됐음을 확인할 수 있다. `client_ip`를 통해 어떤 IP에서 접속한 요청인지도 확인할 수 있다.
