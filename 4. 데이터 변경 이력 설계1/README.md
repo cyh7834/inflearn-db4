@@ -551,3 +551,32 @@ FROM product;
 | 1 | 스마트폰 케이스 | 15000 | WEB_ADMIN | 192.168.1.3 |
 
 `source_system`이 `WEB_ADMIN`으로, 웹 관리자 화면에서 등록됐음을 확인할 수 있다. `client_ip`를 통해 어떤 IP에서 접속한 요청인지도 확인할 수 있다.
+
+### 데이터 수정 - API 연동
+
+외부 파트너사가 API를 통해 가격을 수정하는 경우다.
+
+```sql
+UPDATE product
+SET price = 13000,
+    updated_by = 'partner_api',
+    change_type = 'PRICE_CHANGE',
+    change_reason = '파트너 프로모션 가격 기획',
+    source_system = 'API',
+    client_ip = '123.123.123.123'
+WHERE product_id = 1;
+```
+
+```sql
+SELECT product_id, name, price, source_system, client_ip, change_reason
+FROM product
+WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | source_system | client_ip | change_reason |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 13000 | API | 123.123.123.123 | 파트너 프로모션 가격 기획 |
+
+`source_system`이 `API`로, API 연동을 통해 수정됐음을 확인할 수 있다. `client_ip`로 어느 곳에서 온 요청인지도 확인할 수 있다.
