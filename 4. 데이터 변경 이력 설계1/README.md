@@ -580,3 +580,30 @@ WHERE product_id = 1;
 | 1 | 스마트폰 케이스 | 13000 | API | 123.123.123.123 | 파트너 프로모션 가격 기획 |
 
 `source_system`이 `API`로, API 연동을 통해 수정됐음을 확인할 수 있다. `client_ip`로 어느 곳에서 온 요청인지도 확인할 수 있다.
+
+### 데이터 수정 - 배치 작업
+
+야간 배치가 재고를 조정하는 경우다.
+
+```sql
+UPDATE product
+SET stock_quantity = 85,
+    updated_by = 'batch_system',
+    change_type = 'STOCK_ADJUST',
+    change_reason = '야간 재고 동기화 배치',
+    source_system = 'BATCH',
+    client_ip = '10.0.0.5'
+WHERE product_id = 1;
+```
+
+```sql
+SELECT product_id, name, stock_quantity, source_system, client_ip
+FROM product
+WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| product_id | name | stock_quantity | source_system | client_ip |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 85 | BATCH | 10.0.0.5 |
