@@ -607,3 +607,17 @@ WHERE product_id = 1;
 | product_id | name | stock_quantity | source_system | client_ip |
 | --- | --- | --- | --- | --- |
 | 1 | 스마트폰 케이스 | 85 | BATCH | 10.0.0.5 |
+
+### source_system 표준화
+
+`source_system`도 시스템 경로를 코드값으로 표준화하는 것이 좋다. 예시는 다음과 같다.
+
+| source_system | 설명 |
+| --- | --- |
+| WEB_ADMIN | 웹 관리자 화면 |
+| WEB_USER | 웹 사용자 화면 |
+| MOBILE_APP | 모바일 앱 |
+| API | 외부 API 연동 |
+| BATCH | 배치 시스템 |
+| MIGRATION | 데이터 마이그레이션 |
+| MANUAL | 수동 DB 작업 (DBA 직접 수정) |
