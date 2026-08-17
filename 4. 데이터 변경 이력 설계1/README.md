@@ -698,3 +698,32 @@ WHERE product_id = 1;
 | `client_ip` | VARCHAR(50) | 클라이언트 IP |
 
 **용도**: 여러 경로에서 데이터가 변경되는 시스템, 보안과 감사 추적이 필요한 경우에 사용한다.
+
+### 전체 컬럼 예시
+
+세 종류의 변경 추적 컬럼을 모두 적용한 전체 예시는 다음과 같다.
+
+```sql
+CREATE TABLE product (
+    -- 기본 데이터 컬럼
+    product_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+
+    -- 기본 변경 추적 컬럼
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100) NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_by VARCHAR(100) NOT NULL,
+
+    -- 변경 사유 컬럼
+    change_type VARCHAR(50),
+    change_reason VARCHAR(500),
+
+    -- 감사(Audit) 컬럼
+    source_system VARCHAR(50),
+    client_ip VARCHAR(50)
+);
+```
