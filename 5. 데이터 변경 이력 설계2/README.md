@@ -35,3 +35,26 @@
 - `price` : 현재 가격
 - `previous_price` : 이전 가격
 - `price_changed_at` : 가격이 변경된 시점
+
+### 테이블 설계
+
+```sql
+DROP TABLE IF EXISTS product;
+CREATE TABLE product (
+    product_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL,
+    -- 현재 가격
+    price INT NOT NULL,
+    -- 이전 가격
+    previous_price INT,
+    price_changed_at DATETIME,
+
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100) NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_by VARCHAR(100) NOT NULL
+);
+```
