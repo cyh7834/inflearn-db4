@@ -58,3 +58,26 @@ CREATE TABLE product (
     updated_by VARCHAR(100) NOT NULL
 );
 ```
+
+### 데이터 등록
+
+상품을 처음 등록할 때는 아직 이전 가격이 없다.
+
+```sql
+INSERT INTO product (name, price, previous_price, price_changed_at, stock_quantity, created_by, updated_by)
+VALUES ('스마트폰 케이스', 15000, NULL, NULL, 100, 'admin_kim', 'admin_kim');
+INSERT INTO product (name, price, previous_price, price_changed_at, stock_quantity, created_by, updated_by)
+VALUES ('무선 이어폰', 89000, NULL, NULL, 50, 'admin_lee', 'admin_lee');
+```
+
+```sql
+SELECT product_id, name, price, previous_price, price_changed_at
+FROM product;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | previous_price | price_changed_at |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 15000 | NULL | NULL |
+| 2 | 무선 이어폰 | 89000 | NULL | NULL |
