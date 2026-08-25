@@ -81,3 +81,30 @@ FROM product;
 | --- | --- | --- | --- | --- |
 | 1 | 스마트폰 케이스 | 15000 | NULL | NULL |
 | 2 | 무선 이어폰 | 89000 | NULL | NULL |
+
+### 가격 변경
+
+가격을 변경할 때는 현재 가격을 이전 가격으로 옮기고, 새 가격을 넣는다.
+
+```sql
+UPDATE product
+SET previous_price = price,
+    price = 12000,
+    price_changed_at = NOW(),
+    updated_by = 'admin_park'
+WHERE product_id = 1;
+```
+
+```sql
+SELECT product_id, name, price, previous_price, price_changed_at
+FROM product
+WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | previous_price | price_changed_at |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 12000 | 15000 | 2026-03-01 10:00:00 |
+
+이제 이전 가격을 알 수 있다. 현재 가격은 12,000원이고, 이전 가격은 15,000원이다. 추가로 `price_changed_at`을 통해서 가격이 변경된 시점도 알 수 있다.
