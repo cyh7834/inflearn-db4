@@ -108,3 +108,30 @@ WHERE product_id = 1;
 | 1 | 스마트폰 케이스 | 12000 | 15000 | 2026-03-01 10:00:00 |
 
 이제 이전 가격을 알 수 있다. 현재 가격은 12,000원이고, 이전 가격은 15,000원이다. 추가로 `price_changed_at`을 통해서 가격이 변경된 시점도 알 수 있다.
+
+### 한 번 더 가격 변경
+
+가격을 한 번 더 변경해 본다.
+
+```sql
+UPDATE product
+SET previous_price = price,
+    price = 10000,
+    price_changed_at = NOW(),
+    updated_by = 'admin_kim'
+WHERE product_id = 1;
+```
+
+```sql
+SELECT product_id, name, price, previous_price, price_changed_at
+FROM product
+WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | previous_price | price_changed_at |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 10000 | 12000 | 2026-03-15 14:00:00 |
+
+문제가 생겼다. 현재 가격 10,000원과 직전 가격 12,000원은 알 수 있지만, 최초 가격 15,000원은 사라졌다.
