@@ -135,3 +135,23 @@ WHERE product_id = 1;
 | 1 | 스마트폰 케이스 | 10000 | 12000 | 2026-03-15 14:00:00 |
 
 문제가 생겼다. 현재 가격 10,000원과 직전 가격 12,000원은 알 수 있지만, 최초 가격 15,000원은 사라졌다.
+
+### 한계
+
+이 방식은 "바로 직전 값" 하나만 보관할 수 있다. 두 번 이상 변경되면 과거 값이 사라진다.
+
+```sql
+-- 가격 변경 이력을 모두 보고 싶다면?
+SELECT product_id, name,
+       price AS current_price,
+       previous_price AS one_before,
+       '(최초 가격, 15000): 사라짐' AS two_before
+FROM product
+WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| product_id | name | current_price | one_before | two_before |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 10000 | 12000 | (최초 가격, 15000): 사라짐 |
