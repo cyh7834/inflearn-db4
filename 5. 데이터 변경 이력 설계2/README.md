@@ -155,3 +155,34 @@ WHERE product_id = 1;
 | product_id | name | current_price | one_before | two_before |
 | --- | --- | --- | --- | --- |
 | 1 | 스마트폰 케이스 | 10000 | 12000 | (최초 가격, 15000): 사라짐 |
+
+### 여러 컬럼을 추적해야 한다면?
+
+가격뿐만 아니라 재고, 상태 등도 이전 값을 추적해야 한다면 어떻게 될까?
+
+```sql
+-- 이런 식으로 컬럼이 폭발적으로 늘어난다
+CREATE TABLE product_example (
+    product_id BIGINT PRIMARY KEY,
+    name VARCHAR(200),
+
+    -- 가격 추적
+    price INT,
+    previous_price INT,
+    price_changed_at DATETIME,
+
+    -- 재고 추적
+    stock_quantity INT,
+    previous_stock_quantity INT,
+    stock_changed_at DATETIME,
+
+    -- 상태 추적
+    status VARCHAR(20),
+    previous_status VARCHAR(20),
+    status_changed_at DATETIME
+
+    -- 추적할 컬럼이 늘어날 때마다 3개씩 컬럼이 추가된다...
+);
+```
+
+컬럼이 너무 많아진다. 관리가 어려워지고, 테이블 구조가 복잡해진다.
