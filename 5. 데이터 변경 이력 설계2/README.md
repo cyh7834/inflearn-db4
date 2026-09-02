@@ -221,3 +221,34 @@ SCD는 Slowly Changing Dimension의 약자로, 데이터 웨어하우스 분야�
 ### 아이디어
 
 데이터를 수정할 때 기존 행을 `UPDATE`하지 않고, 새로운 행을 `INSERT`한다. 이렇게 하면 모든 변경 이력이 행으로 남는다. 그리고 `is_current` 필드를 사용해서 최신 데이터를 구분한다.
+
+### 테이블 설계
+
+```sql
+DROP TABLE IF EXISTS product;
+CREATE TABLE product (
+    history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    product_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    is_current BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100) NOT NULL,
+
+    INDEX idx_product_id (product_id),
+    INDEX idx_is_current (is_current),
+    INDEX idx_product_id2 (product_id, created_at)
+);
+```
+
+주요 변경 사항은 다음과 같다.
+
+| 컬럼 | 의미 |
+| --- | --- |
+| `history_id` | 각 이력 행의 고유 ID (Primary Key) |
+| `product_id` | 실제 상품 ID (같은 상품의 이력들은 같은 `product_id`를 가진다) |
+| `is_current` | 현재 유효한 데이터인지 여부 (TRUE면 최신 데이터) |
+
+여기서는 PK가 `history_id`이기 때문에 같은 `product_id`도 여러 번 등록할 수 있다.
