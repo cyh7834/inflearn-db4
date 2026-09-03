@@ -252,3 +252,31 @@ CREATE TABLE product (
 | `is_current` | 현재 유효한 데이터인지 여부 (TRUE면 최신 데이터) |
 
 여기서는 PK가 `history_id`이기 때문에 같은 `product_id`도 여러 번 등록할 수 있다.
+
+### 데이터 등록
+
+상품을 처음 등록한다.
+
+```sql
+INSERT INTO product (product_id, name, price, stock_quantity, status, is_current, created_by, created_at)
+VALUES (1, '스마트폰 케이스', 15000, 100, 'ACTIVE', TRUE, 'admin_kim', '2026-01-15 10:00:00');
+INSERT INTO product (product_id, name, price, stock_quantity, status, is_current, created_by, created_at)
+VALUES (2, '무선 이어폰', 89000, 50, 'ACTIVE', TRUE, 'admin_lee', '2026-01-15 10:05:00');
+```
+
+> 참고: `created_at`은 이후에 사용할 예제를 위해서 시간 정보를 직접 입력했다.
+
+```sql
+SELECT history_id, product_id, name, price, is_current, created_at
+FROM product;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | is_current | created_at |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | 1 | 2026-01-15 10:00:00 |
+| 2 | 2 | 무선 이어폰 | 89000 | 1 | 2026-01-15 10:05:00 |
+
+- `history_id`가 PK이다. `history_id`는 자동증가하는 값이다.
+- `product_id`는 상품 ID를 직접 입력했다.
