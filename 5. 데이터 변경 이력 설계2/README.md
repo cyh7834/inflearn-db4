@@ -280,3 +280,37 @@ FROM product;
 
 - `history_id`가 PK이다. `history_id`는 자동증가하는 값이다.
 - `product_id`는 상품 ID를 직접 입력했다.
+
+### 데이터 변경
+
+스마트폰 케이스의 가격을 15000에서 12000으로 변경해 본다. 이 방식에서 가격을 변경할 때는 두 가지 작업이 필요하다.
+
+1. 기존 행의 `is_current`를 `FALSE`로 변경
+2. 새로운 행을 `INSERT`
+
+```sql
+-- 1. 기존 행을 과거 데이터로 변경
+UPDATE product
+SET is_current = FALSE
+WHERE product_id = 1 AND is_current = TRUE;
+
+-- 2. 새로운 행 추가
+INSERT INTO product (product_id, name, price, stock_quantity, status, is_current, created_by, created_at)
+VALUES (1, '스마트폰 케이스', 12000, 100, 'ACTIVE', TRUE, 'admin_park', '2026-03-01 10:00:00');
+```
+
+```sql
+SELECT history_id, product_id, name, price, is_current, created_at, created_by
+FROM product
+WHERE product_id = 1
+ORDER BY history_id;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | is_current | created_at | created_by |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | 0 | 2026-01-15 10:00:00 | admin_kim |
+| 3 | 1 | 스마트폰 케이스 | 12000 | 1 | 2026-03-01 10:00:00 | admin_park |
+
+두 개의 행이 있다. `is_current = 0`인 행은 과거 데이터이고, `is_current = 1`인 행이 현재 데이터다.
