@@ -314,3 +314,20 @@ ORDER BY history_id;
 | 3 | 1 | 스마트폰 케이스 | 12000 | 1 | 2026-03-01 10:00:00 | admin_park |
 
 두 개의 행이 있다. `is_current = 0`인 행은 과거 데이터이고, `is_current = 1`인 행이 현재 데이터다.
+
+### 현재 데이터만 조회
+
+`is_current=TRUE`를 통해 현재 유효한 데이터만 조회할 수 있다.
+
+```sql
+SELECT history_id, product_id, name, price, stock_quantity, status, is_current
+FROM product
+WHERE is_current = TRUE
+  AND product_id = 1;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | stock_quantity | status | is_current |
+| --- | --- | --- | --- | --- | --- | --- |
+| 3 | 1 | 스마트폰 케이스 | 12000 | 100 | ACTIVE | 1 |
