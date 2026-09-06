@@ -331,3 +331,35 @@ WHERE is_current = TRUE
 | history_id | product_id | name | price | stock_quantity | status | is_current |
 | --- | --- | --- | --- | --- | --- | --- |
 | 3 | 1 | 스마트폰 케이스 | 12000 | 100 | ACTIVE | 1 |
+
+### 한 번 더 변경
+
+이번에는 스마트폰 케이스의 가격을 12000에서 10000으로 변경하고, 재고도 100에서 95로 변경한다.
+
+```sql
+-- 1. 기존 행을 과거 데이터로 변경
+UPDATE product
+SET is_current = FALSE
+WHERE product_id = 1 AND is_current = TRUE;
+
+-- 2. 새로운 행 추가
+INSERT INTO product (product_id, name, price, stock_quantity, status, is_current, created_by, created_at)
+VALUES (1, '스마트폰 케이스', 10000, 95, 'ACTIVE', TRUE, 'admin_kim', '2026-03-15 14:00:00');
+```
+
+```sql
+SELECT history_id, product_id, name, price, stock_quantity, is_current, created_at
+FROM product
+WHERE product_id = 1
+ORDER BY history_id;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | stock_quantity | is_current | created_at |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | 100 | 0 | 2026-01-15 10:00:00 |
+| 3 | 1 | 스마트폰 케이스 | 12000 | 100 | 0 | 2026-03-01 10:00:00 |
+| 4 | 1 | 스마트폰 케이스 | 10000 | 95 | 1 | 2026-03-15 14:00:00 |
+
+이제 모든 변경 이력이 남는다. 가격이 15,000 → 12,000 → 10,000으로 변경된 것을 모두 확인할 수 있다. 재고도 마지막에 100에서 95로 변경된 것을 확인할 수 있다.
