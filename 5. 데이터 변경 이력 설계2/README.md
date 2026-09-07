@@ -363,3 +363,20 @@ ORDER BY history_id;
 | 4 | 1 | 스마트폰 케이스 | 10000 | 95 | 1 | 2026-03-15 14:00:00 |
 
 이제 모든 변경 이력이 남는다. 가격이 15,000 → 12,000 → 10,000으로 변경된 것을 모두 확인할 수 있다. 재고도 마지막에 100에서 95로 변경된 것을 확인할 수 있다.
+
+### 과거 데이터만 조회
+
+`is_current=FALSE` 조건을 통해 과거 데이터만 조회할 수 있다.
+
+```sql
+SELECT history_id, product_id, name, price, stock_quantity, status, is_current
+FROM product
+WHERE is_current = FALSE;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | stock_quantity | status | is_current |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | 100 | ACTIVE | 0 |
+| 3 | 1 | 스마트폰 케이스 | 12000 | 100 | ACTIVE | 0 |
