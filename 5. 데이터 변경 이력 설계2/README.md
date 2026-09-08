@@ -380,3 +380,21 @@ WHERE is_current = FALSE;
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 1 | 스마트폰 케이스 | 15000 | 100 | ACTIVE | 0 |
 | 3 | 1 | 스마트폰 케이스 | 12000 | 100 | ACTIVE | 0 |
+
+### 특정 상품의 전체 이력 조회
+
+```sql
+SELECT history_id, product_id, name, price, stock_quantity, created_at, created_by,
+       CASE WHEN is_current THEN '현재' ELSE '과거' END AS data_status
+FROM product
+WHERE product_id = 1
+ORDER BY created_at;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | stock_quantity | created_at | created_by | data_status |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | 100 | 2026-01-15 10:00:00 | admin_kim | 과거 |
+| 3 | 1 | 스마트폰 케이스 | 12000 | 100 | 2026-03-01 10:00:00 | admin_park | 과거 |
+| 4 | 1 | 스마트폰 케이스 | 10000 | 95 | 2026-03-15 14:00:00 | admin_kim | 현재 |
