@@ -485,3 +485,56 @@ LIMIT 1;
 | 3 | 1 | 스마트폰 케이스 | 12000 | 2026-03-01 10:00:00 | 0 |
 
 3월 10일 기준 가격은 12,000원이었다. 단일 상품의 경우 특정 시점의 조회는 간단하다.
+
+## 현재 테이블로 이력 관리 - 단점 2
+
+### 전체 통계에서의 성능 문제
+
+앞서 본 것처럼 단일 상품의 시점 조회는 괜찮다. 하지만 전체 상품의 특정 시점 통계를 내야 한다면 어떻게 될까?
+
+**"2026년 3월 10일 기준, 모든 상품의 총 재고 수량은?"**
+
+우선 모든 데이터를 확인한다.
+
+```sql
+SELECT history_id, product_id, name, created_at, stock_quantity
+FROM product
+ORDER BY created_at DESC;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | created_at | stock_quantity |
+| --- | --- | --- | --- | --- |
+| 4 | 1 | 스마트폰 케이스 | 2026-03-15 14:00:00 | 95 |
+| 3 | 1 | 스마트폰 케이스 | 2026-03-01 10:00:00 | 100 |
+| 2 | 2 | 무선 이어폰 | 2026-01-15 10:05:00 | 50 |
+| 1 | 1 | 스마트폰 케이스 | 2026-01-15 10:00:00 | 100 |
+
+2026년 3월 10일 기준 상품은 다음과 같다.
+
+- **스마트폰 케이스**: `history_id=3`, 재고: 100
+- **무선 이어폰**: `history_id=2`, 재고: 50
+
+각 상품별 2026년 3월 10일 기준 재고를 모두 구해서 합하는 쿼리는 다음과 같다.
+
+```sql
+-- 각 상품별로 해당 시점의 최신 데이터를 찾아야 한다
+SELECT SUM(p.stock_quantity) AS total_stock
+FROM product p
+INNER JOIN (
+    SELECT product_id, MAX(created_at) AS max_created_at
+    FROM product
+    WHERE created_at <= '2026-03-10 23:59:59'
+    GROUP BY product_id
+) latest ON p.product_id = latest.product_id
+        AND p.created_at = latest.max_created_at;
+```
+
+**[실행 결과]**
+
+| total_stock |
+| --- |
+| 150 |
+
+이 쿼리는 서브쿼리(Subquery)와 조인(Join), 그리고 집계 함수(Aggregate Function)가 섞여 있어 처음 보면 복잡해 보일 수 있다. 우리가 원하는 것은 **"2026년 3월 10일 시점에 각 상품의 가장 마지막 상태"**를 찾아내는 것이다. 이 쿼리가 만들어진 과정을 단계별로 살펴본다.
