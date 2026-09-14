@@ -593,3 +593,30 @@ GROUP BY product_id;
 
 - 상품 1번(스마트폰 케이스)은 3월 1일 10시 데이터가 최신이다.
 - 상품 2번(무선 이어폰)은 1월 15일 10시 5분 데이터가 최신이다.
+
+### 3단계: 원본 테이블과 조인하여 재고 정보 가져오기
+
+2단계에서 구한 것은 단순히 `product_id`와 `시간` 정보뿐이다. 실제 `stock_quantity(재고)` 정보를 알기 위해서는 이 정보를 바탕으로 다시 원본 `product` 테이블과 조인(Join)해야 한다.
+
+이때 **'상품 ID가 같고' AND '생성 시간이 같은'** 행을 찾아야 정확한 이력 데이터를 가져올 수 있다.
+
+```sql
+SELECT p.product_id, p.name, p.stock_quantity, p.created_at
+FROM product p
+INNER JOIN (
+    SELECT product_id, MAX(created_at) AS max_created_at
+    FROM product
+    WHERE created_at <= '2026-03-10 23:59:59'
+    GROUP BY product_id
+) latest ON p.product_id = latest.product_id
+        AND p.created_at = latest.max_created_at;
+```
+
+**[실행 결과]**
+
+| product_id | name | stock_quantity | created_at |
+| --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 100 | 2026-03-01 10:00:00 |
+| 2 | 무선 이어폰 | 50 | 2026-01-15 10:05:00 |
+
+드디어 3월 10일 기준의 각 상품별 유효한 행을 하나씩 뽑아냈다.
