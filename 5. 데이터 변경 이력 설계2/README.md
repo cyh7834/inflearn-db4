@@ -620,3 +620,27 @@ INNER JOIN (
 | 2 | 무선 이어폰 | 50 | 2026-01-15 10:05:00 |
 
 드디어 3월 10일 기준의 각 상품별 유효한 행을 하나씩 뽑아냈다.
+
+### 4단계: 최종 집계
+
+이제 각 상품의 재고 수량(`stock_quantity`)을 모두 더하기만 하면 된다.
+
+```sql
+SELECT SUM(p.stock_quantity) AS total_stock
+FROM product p
+INNER JOIN (
+    SELECT product_id, MAX(created_at) AS max_created_at
+    FROM product
+    WHERE created_at <= '2026-03-10 23:59:59'
+    GROUP BY product_id
+) latest ON p.product_id = latest.product_id
+        AND p.created_at = latest.max_created_at;
+```
+
+**[실행 결과]**
+
+| total_stock |
+| --- |
+| 150 |
+
+상품 1의 재고(100개)와 상품 2의 재고(50개)가 합쳐져서 최종 결과 150개가 나왔다.
