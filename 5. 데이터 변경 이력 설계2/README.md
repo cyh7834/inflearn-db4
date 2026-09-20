@@ -669,3 +669,28 @@ INNER JOIN (
 
 - `valid_from` : 이 데이터가 유효해진 시점
 - `valid_to` : 이 데이터가 더 이상 유효하지 않게 된 시점 (현재 데이터는 `NULL` 또는 먼 미래 날짜)
+
+### 테이블 설계
+
+```sql
+DROP TABLE IF EXISTS product;
+CREATE TABLE product (
+    history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    product_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    -- 유효 기간
+    valid_from DATETIME NOT NULL,
+    valid_to DATETIME NOT NULL DEFAULT '9999-12-31 23:59:59',
+    is_current BOOLEAN NOT NULL DEFAULT TRUE,
+    created_by VARCHAR(100) NOT NULL,
+
+    INDEX idx_product_id_valid_range (product_id, valid_from, valid_to),
+    INDEX idx_valid_range (valid_from, valid_to),
+    INDEX idx_is_current (is_current)
+);
+```
+
+`valid_to`의 기본값을 `'9999-12-31 23:59:59'`로 설정했다. 이렇게 하면 현재 유효한 데이터를 쉽게 식별할 수 있다. 또한 `idx_product_id_valid_range`, `idx_valid_range` 인덱스를 추가해서 유효 기간 검색을 빠르게 한다.
