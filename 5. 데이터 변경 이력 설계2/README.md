@@ -694,3 +694,24 @@ CREATE TABLE product (
 ```
 
 `valid_to`의 기본값을 `'9999-12-31 23:59:59'`로 설정했다. 이렇게 하면 현재 유효한 데이터를 쉽게 식별할 수 있다. 또한 `idx_product_id_valid_range`, `idx_valid_range` 인덱스를 추가해서 유효 기간 검색을 빠르게 한다.
+
+### 데이터 등록
+
+```sql
+INSERT INTO product (product_id, name, price, stock_quantity, status, valid_from, valid_to, is_current, created_by)
+VALUES (1, '스마트폰 케이스', 15000, 100, 'ACTIVE', '2026-01-10 10:00:00', '9999-12-31 23:59:59', TRUE, 'admin_kim');
+INSERT INTO product (product_id, name, price, stock_quantity, status, valid_from, valid_to, is_current, created_by)
+VALUES (2, '무선 이어폰', 89000, 50, 'ACTIVE', '2026-01-10 10:05:00', '9999-12-31 23:59:59', TRUE, 'admin_lee');
+```
+
+```sql
+SELECT history_id, product_id, name, price, valid_from, valid_to, is_current
+FROM product;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | valid_from | valid_to | is_current |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | 2026-01-10 10:00:00 | 9999-12-31 23:59:59 | 1 |
+| 2 | 2 | 무선 이어폰 | 89000 | 2026-01-10 10:05:00 | 9999-12-31 23:59:59 | 1 |
