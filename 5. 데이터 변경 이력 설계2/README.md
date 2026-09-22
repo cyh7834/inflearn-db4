@@ -715,3 +715,47 @@ FROM product;
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 1 | 스마트폰 케이스 | 15000 | 2026-01-10 10:00:00 | 9999-12-31 23:59:59 | 1 |
 | 2 | 2 | 무선 이어폰 | 89000 | 2026-01-10 10:05:00 | 9999-12-31 23:59:59 | 1 |
+
+### 데이터 변경
+
+2026-01-12일(현재로 가정) 스마트폰 케이스의 가격을 15000에서 12000으로 변경한다. 이 방식에서 가격을 변경할 때는 세 가지 작업이 필요하다.
+
+1. 기존 행의 `valid_to`를 현재 시점으로 변경
+2. 기존 행의 `is_current`를 `FALSE`로 변경
+3. 새로운 행을 `INSERT`
+
+```sql
+-- 변경 시점 (현재로 가정)
+SET @change_time = '2026-01-12 10:00:00';
+
+-- 1. 기존 행의 유효 기간 종료
+UPDATE product
+SET valid_to = @change_time,
+    is_current = FALSE
+WHERE product_id = 1 AND is_current = TRUE;
+
+-- 2. 새로운 행 추가
+INSERT INTO product (product_id, name, price, stock_quantity, status, valid_from, valid_to, is_current, created_by)
+VALUES (1, '스마트폰 케이스', 12000, 100, 'ACTIVE', @change_time, '9999-12-31 23:59:59', TRUE, 'admin_park');
+```
+
+```sql
+SELECT history_id, product_id, name, price, valid_from, valid_to, is_current
+FROM product
+WHERE product_id = 1
+ORDER BY valid_from;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | valid_from | valid_to | is_current |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | 2026-01-10 10:00:00 | 2026-01-12 10:00:00 | 0 |
+| 3 | 1 | 스마트폰 케이스 | 12000 | 2026-01-12 10:00:00 | 9999-12-31 23:59:59 | 1 |
+
+`valid_from`, `valid_to` 컬럼 덕분에 이제 각 행이 언제부터 언제까지 유효한지 명확하다.
+
+- 첫 번째 행: 2026-01-10 ~ 2026-01-12 동안 유효 (가격 15,000원)
+- 두 번째 행: 2026-01-12 ~ 현재까지 유효 (가격 12,000원)
+
+> 참고: `9999-12-31`은 항상 지금 시점을 포함한다.
