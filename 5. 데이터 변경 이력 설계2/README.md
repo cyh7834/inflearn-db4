@@ -759,3 +759,34 @@ ORDER BY valid_from;
 - 두 번째 행: 2026-01-12 ~ 현재까지 유효 (가격 12,000원)
 
 > 참고: `9999-12-31`은 항상 지금 시점을 포함한다.
+
+### 한 번 더 변경
+
+2026-01-14일(현재로 가정) 스마트폰 케이스의 가격을 12000에서 10000으로 변경하고, 재고를 100에서 95로 변경한다.
+
+```sql
+SET @change_time = '2026-01-14 14:00:00';
+
+UPDATE product
+SET valid_to = @change_time,
+    is_current = FALSE
+WHERE product_id = 1 AND is_current = TRUE;
+
+INSERT INTO product (product_id, name, price, stock_quantity, status, valid_from, valid_to, is_current, created_by)
+VALUES (1, '스마트폰 케이스', 10000, 95, 'ACTIVE', @change_time, '9999-12-31 23:59:59', TRUE, 'admin_kim');
+```
+
+```sql
+SELECT history_id, product_id, name, price, stock_quantity, valid_from, valid_to, is_current
+FROM product
+WHERE product_id = 1
+ORDER BY valid_from;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | stock_quantity | valid_from | valid_to | is_current |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | 100 | 2026-01-10 10:00:00 | 2026-01-12 10:00:00 | 0 |
+| 3 | 1 | 스마트폰 케이스 | 12000 | 100 | 2026-01-12 10:00:00 | 2026-01-14 14:00:00 | 0 |
+| 4 | 1 | 스마트폰 케이스 | 10000 | 95 | 2026-01-14 14:00:00 | 9999-12-31 23:59:59 | 1 |
