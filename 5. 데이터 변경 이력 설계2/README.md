@@ -973,3 +973,44 @@ SELECT * FROM product WHERE is_current = TRUE;
 대부분의 조회는 현재 데이터를 조회한다. 상품 목록, 주문 처리, 재고 확인 등 일상적인 업무는 모두 현재 데이터를 사용한다. 이력 조회는 문제가 발생했거나, 감사 요청이 있거나, 특별한 분석이 필요할 때만 한다.
 
 그런데 현재 테이블에 이력이 함께 있으면 99%의 일반 조회에서도 이력 데이터를 함께 스캔해야 한다. 이것은 매우 비효율적이다.
+
+### 테이블 분리 설계
+
+```sql
+-- 현재 데이터 테이블
+DROP TABLE IF EXISTS product;
+CREATE TABLE product (
+    product_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by VARCHAR(100) NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_by VARCHAR(100) NOT NULL
+);
+
+-- 이력 테이블
+DROP TABLE IF EXISTS product_history;
+CREATE TABLE product_history (
+    history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    product_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at DATETIME NOT NULL,
+    created_by VARCHAR(100) NOT NULL,
+    -- 이력 관리 컬럼
+    history_created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    history_created_by VARCHAR(100) NOT NULL,
+    change_type VARCHAR(50),
+    change_reason VARCHAR(500),
+
+    INDEX idx_product_id (product_id),
+    INDEX idx_history_created_at (history_created_at)
+);
+```
+
+현재 테이블(`product`)은 최신 데이터만 보관한다. 이력 테이블(`product_history`)은 모든 변경 이력을 저장한다.
