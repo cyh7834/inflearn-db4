@@ -1027,3 +1027,67 @@ CREATE TABLE product_history (
 | **질문 예시** | "이 상품은 최초에 언제 등록되었나요?" | "상품의 가격이 언제 변경되었나요?", "과거 특정 시점의 데이터는 무엇이었나요?" |
 | **값의 변화** | 동일한 `product_id`를 가진 이력 데이터들 사이에서는 **값이 변하지 않는다.** (상품의 생일은 바뀌지 않으므로) | 변경이 발생할 때마다 **매번 새로운 시간**이 기록된다. |
 | **비고** | 데이터의 **'속성'**에 해당한다. | 데이터 변경의 **'타임라인'** 역할을 한다. |
+
+### 데이터 등록
+
+상품을 등록할 때 현재 테이블과 이력 테이블 모두에 데이터를 넣는다.
+
+```sql
+-- 현재 테이블에 등록
+INSERT INTO product (name, price, stock_quantity, status, created_by, updated_by, created_at)
+VALUES ('스마트폰 케이스', 15000, 100, 'ACTIVE', 'admin_kim', 'admin_kim', '2026-01-15 10:00:00');
+
+-- 이력 테이블에도 등록 (첫 데이터)
+INSERT INTO product_history (product_id, name, price, stock_quantity, status,
+    created_at, created_by, history_created_at, history_created_by, change_type, change_reason)
+SELECT product_id, name, price, stock_quantity, status, created_at,
+       created_by, '2026-01-15 10:00:00', 'admin_kim', 'CREATE', '신규 상품 등록'
+FROM product WHERE product_id = LAST_INSERT_ID();
+```
+
+> 참고: 이후 진행할 예제를 위해 `created_at`에 날짜 데이터를 직접 입력했다.
+
+이력 테이블은 현재 테이블의 데이터를 복사해서 저장한다. 이때 현재 테이블의 `created_at`도 이력 테이블의 `created_at`으로 그대로 복사한다.
+
+두 번째 상품도 등록한다.
+
+```sql
+INSERT INTO product (name, price, stock_quantity, status, created_by, updated_by, created_at)
+VALUES ('무선 이어폰', 89000, 50, 'ACTIVE', 'admin_lee', 'admin_lee', '2026-01-15 10:05:00');
+
+INSERT INTO product_history (product_id, name, price, stock_quantity, status,
+    created_at, created_by, history_created_at, history_created_by, change_type, change_reason)
+SELECT product_id, name, price, stock_quantity, status, created_at,
+       created_by, '2026-01-15 10:05:00', 'admin_lee', 'CREATE', '신규 상품 등록'
+FROM product WHERE product_id = LAST_INSERT_ID();
+```
+
+현재 테이블을 확인한다.
+
+```sql
+SELECT product_id, name, price, stock_quantity, created_at
+FROM product;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | stock_quantity | created_at |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 15000 | 100 | 2026-01-15 10:00:00 |
+| 2 | 무선 이어폰 | 89000 | 50 | 2026-01-15 10:05:00 |
+
+이력 테이블을 확인한다.
+
+```sql
+SELECT history_id, product_id, name, price, change_type, history_created_at
+FROM product_history;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | change_type | history_created_at |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | CREATE | 2026-01-15 10:00:00 |
+| 2 | 2 | 무선 이어폰 | 89000 | CREATE | 2026-01-15 10:05:00 |
+
+현재 테이블과 이력 테이블 모두에 같은 데이터가 입력된 것을 확인할 수 있다. 최초 데이터를 두 곳에 함께 보관하는 이유는 바로 뒤에서 설명한다.
