@@ -1091,3 +1091,59 @@ FROM product_history;
 | 2 | 2 | 무선 이어폰 | 89000 | CREATE | 2026-01-15 10:05:00 |
 
 현재 테이블과 이력 테이블 모두에 같은 데이터가 입력된 것을 확인할 수 있다. 최초 데이터를 두 곳에 함께 보관하는 이유는 바로 뒤에서 설명한다.
+
+### 데이터 변경
+
+스마트폰 케이스의 가격을 15000에서 12000으로 변경한다. 가격을 변경할 때는 다음과 같이 한다.
+
+1. 이력 테이블에 새로운 상태를 `INSERT`
+2. 현재 테이블을 `UPDATE`
+
+```sql
+-- 1. 이력 테이블에 변경 후 상태 저장
+INSERT INTO product_history (product_id, name, price, stock_quantity, status,
+    created_at, created_by, history_created_at, history_created_by, change_type, change_reason)
+VALUES (1, '스마트폰 케이스', 12000, 100, 'ACTIVE', '2026-01-15 10:00:00',
+    'admin_kim', '2026-03-01 10:00:00', 'admin_park', 'PRICE_CHANGE', '봄맞이 할인 이벤트');
+
+-- 2. 현재 테이블 업데이트
+UPDATE product
+SET price = 12000,
+    updated_at = '2026-03-01 10:00:00',
+    updated_by = 'admin_park'
+WHERE product_id = 1;
+```
+
+> 참고: `product` 테이블의 `updated_at`, `product_history` 테이블의 `history_created_at` 컬럼은 현재 날짜(`now()`)를 사용해야 하지만, 여기서는 원활한 예제 진행을 위해 날짜를 직접 지정했다.
+
+현재 테이블을 확인한다.
+
+```sql
+SELECT product_id, name, price, updated_at, updated_by
+FROM product
+WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | updated_at | updated_by |
+| --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 12000 | 2026-03-01 10:00:00 | admin_park |
+
+이력 테이블을 확인한다.
+
+```sql
+SELECT history_id, product_id, name, price, change_type, change_reason, history_created_at
+FROM product_history
+WHERE product_id = 1
+ORDER BY history_id;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price | change_type | change_reason | history_created_at |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | CREATE | 신규 상품 등록 | 2026-01-15 10:00:00 |
+| 3 | 1 | 스마트폰 케이스 | 12000 | PRICE_CHANGE | 봄맞이 할인 이벤트 | 2026-03-01 10:00:00 |
+
+이력 테이블의 `history_created_at` 컬럼을 통해 이 데이터가 변경된 날짜를 확인할 수 있다.
