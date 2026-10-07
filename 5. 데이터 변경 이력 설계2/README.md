@@ -1147,3 +1147,38 @@ ORDER BY history_id;
 | 3 | 1 | 스마트폰 케이스 | 12000 | PRICE_CHANGE | 봄맞이 할인 이벤트 | 2026-03-01 10:00:00 |
 
 이력 테이블의 `history_created_at` 컬럼을 통해 이 데이터가 변경된 날짜를 확인할 수 있다.
+
+### 한 번 더 변경
+
+이번에는 재고를 100에서 95로 조정한다.
+
+```sql
+-- 재고 조정
+INSERT INTO product_history (product_id, name, price, stock_quantity, status,
+    created_at, created_by, history_created_at, history_created_by, change_type, change_reason)
+VALUES (1, '스마트폰 케이스', 12000, 95, 'ACTIVE', '2026-01-15 10:00:00',
+    'admin_kim', '2026-03-15 14:00:00', 'warehouse_kim', 'STOCK_ADJUST', '재고 실사 - 5개 파손');
+
+UPDATE product
+SET stock_quantity = 95,
+    updated_at = NOW(),
+    updated_by = 'warehouse_kim'
+WHERE product_id = 1;
+```
+
+```sql
+SELECT history_id, product_id, price, stock_quantity, change_type, change_reason, history_created_at
+FROM product_history
+WHERE product_id = 1
+ORDER BY history_id;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | price | stock_quantity | change_type | change_reason | history_created_at |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 15000 | 100 | CREATE | 신규 상품 등록 | 2026-01-15 10:00:00 |
+| 3 | 1 | 12000 | 100 | PRICE_CHANGE | 봄맞이 할인 이벤트 | 2026-03-01 10:00:00 |
+| 4 | 1 | 12000 | 95 | STOCK_ADJUST | 재고 실사 - 5개 파손 | 2026-03-15 14:00:00 |
+
+이력 테이블을 확인해보면 모든 변경 이력이 보관되고 있다.
