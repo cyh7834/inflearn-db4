@@ -1214,3 +1214,132 @@ ORDER BY history_id;
 많은 개발자들이 이력 테이블을 처음 설계할 때 "최신 데이터는 `product` 테이블에만 저장하고, **데이터가 변경되는 시점부터** 기존 데이터를 `product_history`로 옮기면 중복을 제거하고 저장 공간을 아낄 수 있지 않을까?"라고 생각한다.
 
 언뜻 보면 합리적인 생각이다. 하지만 이 방식은 데이터를 조회할 때 **지옥 같은 복잡함**을 선물한다. 왜 그런지 실제 예제 코드로 확인한다.
+
+### 1. 잘못된 설계 실험: 변경 시점에만 이력을 저장하는 경우
+
+먼저 잘못된 방식으로 테이블을 만들고 데이터를 넣어본다. 비교를 위해 `_bad`라는 접미사를 붙여 테이블을 생성한다.
+
+```sql
+DROP TABLE IF EXISTS product_bad;
+DROP TABLE IF EXISTS product_history_bad;
+
+-- 잘못된 설계: 현재 테이블
+CREATE TABLE product_bad (
+    product_id BIGINT PRIMARY KEY,
+    price INT,
+    updated_at DATETIME
+);
+
+-- 잘못된 설계: 이력 테이블 (변경 전 데이터를 저장)
+CREATE TABLE product_history_bad (
+    history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    product_id BIGINT,
+    price INT,
+    updated_at DATETIME
+);
+```
+
+> 참고: 예제를 단순화하기 위해 날짜는 `updated_at` 컬럼 하나만 사용했다.
+
+**상황 1: 상품 등록 (INSERT)**
+
+상품을 10,000원에 등록한다. 잘못된 설계에서는 `INSERT` 시점에 이력을 남기지 않는다.
+
+```sql
+INSERT INTO product_bad (product_id, price, updated_at)
+VALUES (1, 10000, '2026-01-01 10:00:00');
+```
+
+이 시점에 이력 테이블을 조회한다.
+
+```sql
+SELECT * FROM product_history_bad;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | price | updated_at |
+| --- | --- | --- | --- |
+| (NULL) | (NULL) | (NULL) | (NULL) |
+
+**문제점**: 이 상품이 언제 처음 생성되었는지, 최초의 가격은 얼마였는지 **이력 테이블만 봐서는 알 수 없다.** 즉, 이력의 끊김이 발생한다. 이 경우 원본 테이블을 추가로 확인해야 한다.
+
+```sql
+SELECT * FROM product_bad;
+```
+
+**[실행 결과]**
+
+| product_id | price | updated_at |
+| --- | --- | --- |
+| 1 | 10000 | 2026-01-01 10:00:00 |
+
+**상황 2: 가격 변경 (UPDATE)**
+
+가격을 10,000원에서 20,000원으로 인상한다. 이때 기존 데이터(10,000원)를 이력 테이블로 옮긴다.
+
+```sql
+-- 1. 변경 전 데이터를 이력에 저장
+INSERT INTO product_history_bad (product_id, price, updated_at)
+SELECT product_id, price, updated_at FROM product_bad WHERE product_id = 1;
+
+-- 2. 현재 테이블 업데이트
+UPDATE product_bad
+SET price = 20000, updated_at = '2026-02-01 10:00:00'
+WHERE product_id = 1;
+```
+
+```sql
+SELECT * FROM product_bad;
+```
+
+**[실행 결과]**
+
+| product_id | price | updated_at |
+| --- | --- | --- |
+| 1 | 20000 | 2026-02-01 10:00:00 |
+
+```sql
+SELECT * FROM product_history_bad;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | price | updated_at |
+| --- | --- | --- | --- |
+| 1 | 1 | 10000 | 2026-01-01 10:00:00 |
+
+원본 테이블에는 20000원과 2026-02-01 날짜가, 이력 테이블에는 과거의 이력인 10000원과 2026-01-01 날짜가 저장된 것을 확인할 수 있다. 여기까지는 문제가 없어 보인다.
+
+**상황 3: 과거 내역 조회 (문제의 발생)**
+
+이제 현업 부서에서 **"이 상품의 전체 가격 변동 내역을 시간순으로 뽑아주세요"**라고 요청했다. 이력 테이블만 조회하면 될까?
+
+```sql
+SELECT * FROM product_history_bad;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | price | updated_at |
+| --- | --- | --- | --- |
+| 1 | 1 | 10000 | 2026-01-01 10:00:00 |
+
+현재 가격인 `20000`원은 당연히 나오지 않는다. 이력 테이블에는 '과거'만 있고 '현재'가 없기 때문이다. 완벽한 이력을 보려면 **현재 테이블과 이력 테이블을 합쳐야(UNION) 한다.**
+
+```sql
+-- 잘못된 설계에서 전체 이력을 조회하는 쿼리
+SELECT product_id, price, updated_at FROM product_bad WHERE product_id = 1
+UNION ALL
+SELECT product_id, price, updated_at FROM product_history_bad WHERE product_id = 1
+ORDER BY updated_at;
+```
+
+**[실행 결과]**
+
+| product_id | price | updated_at |
+| --- | --- | --- |
+| 1 | 10000 | 2026-01-01 10:00:00 |
+| 1 | 20000 | 2026-02-01 10:00:00 |
+
+단순한 이력 조회를 위해 매번 두 테이블을 `UNION`해야 한다. 만약 테이블에 컬럼이 50개라면 쿼리는 끔찍하게 길어질 것이다. 또한 "특정 시점(예: 1월 15일)의 가격"을 조회하려고 하면 로직은 훨씬 더 복잡해진다.
