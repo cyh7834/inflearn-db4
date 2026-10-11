@@ -1343,3 +1343,25 @@ ORDER BY updated_at;
 | 1 | 20000 | 2026-02-01 10:00:00 |
 
 단순한 이력 조회를 위해 매번 두 테이블을 `UNION`해야 한다. 만약 테이블에 컬럼이 50개라면 쿼리는 끔찍하게 길어질 것이다. 또한 "특정 시점(예: 1월 15일)의 가격"을 조회하려고 하면 로직은 훨씬 더 복잡해진다.
+
+### 2. 올바른 설계 확인: 처음부터 다 저장하는 경우
+
+우리가 앞서 설계한 `product`와 `product_history` 테이블의 방식을 본다. 우리는 `INSERT` 시점부터 이력을 저장했다.
+
+```sql
+-- 올바른 설계: 오직 이력 테이블만 조회하면 된다.
+SELECT price, history_created_at, change_type
+FROM product_history
+WHERE product_id = 1
+ORDER BY history_created_at;
+```
+
+**[실행 결과]**
+
+| price | history_created_at | change_type |
+| --- | --- | --- |
+| 15000 | 2026-01-15 10:00:00 | CREATE |
+| 12000 | 2026-03-01 10:00:00 | PRICE_CHANGE |
+| 12000 | 2026-03-15 14:00:00 | STOCK_ADJUST |
+
+**현재 테이블(`product`)을 전혀 신경 쓰지 않고도,** 상품의 탄생부터 현재까지의 모든 역사가 완벽하게 조회된다. 쿼리도 단순하고, 개발자의 실수 가능성도 거의 없다.
