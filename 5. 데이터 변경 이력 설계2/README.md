@@ -1402,3 +1402,47 @@ INSERT INTO product_history (...) VALUES (..., 'CREATE', '신규 등록');
 ## 전체 행 스냅샷 이력 테이블 - 유효 기간
 
 현재 테이블과 이력 테이블을 분리했다. 그렇다면 이력 테이블에서 특정 시점의 데이터를 조회하려면 어떻게 해야 할까? 앞서 "현재 테이블로 이력 관리 - 유효 기간"에서 이미 이런 해결 방식을 살펴보았다. 이번에는 같은 내용을 현재와 이력이 분리된 테이블에 적용하는 것이다.
+
+### 시점 조회의 문제
+
+이력 테이블 구조에서 특정 상품의 "2026년 3월 10일 기준 가격"을 조회한다.
+
+> 참고: 이력 테이블에는 과거 이력뿐만 아니라 현재 데이터도 함께 존재한다. 따라서 이력 테이블만 조회해도 필요한 모든 데이터를 찾을 수 있다.
+
+```sql
+SELECT product_id, name, price, history_created_at
+FROM product_history
+WHERE product_id = 1
+  AND history_created_at <= '2026-03-10 23:59:59'
+ORDER BY history_created_at DESC
+LIMIT 1;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | history_created_at |
+| --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 12000 | 2026-03-01 10:00:00 |
+
+단일 상품 조회는 문제없다. 하지만 전체 상품의 특정 시점 통계를 내려면 복잡한 서브쿼리가 필요하다.
+
+```sql
+-- 2026년 3월 10일 기준 전체 재고
+SELECT SUM(h.stock_quantity) AS total_stock
+FROM product_history h
+INNER JOIN (
+    SELECT product_id, MAX(history_created_at) AS max_history_at
+    FROM product_history
+    WHERE history_created_at <= '2026-03-10 23:59:59'
+    GROUP BY product_id
+) latest ON h.product_id = latest.product_id
+        AND h.history_created_at = latest.max_history_at;
+```
+
+**[실행 결과]**
+
+| total_stock |
+| --- |
+| 150 |
+
+이 문제는 앞서 배운 유효 기간 `valid_from`, `valid_to`를 적용하면 해결할 수 있다. 이력 테이블에는 모든 데이터가 다 저장되어 있으므로, 여기에 유효 기간만 추가하고 관리하면 된다.
