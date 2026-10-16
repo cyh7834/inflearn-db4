@@ -1446,3 +1446,31 @@ INNER JOIN (
 | 150 |
 
 이 문제는 앞서 배운 유효 기간 `valid_from`, `valid_to`를 적용하면 해결할 수 있다. 이력 테이블에는 모든 데이터가 다 저장되어 있으므로, 여기에 유효 기간만 추가하고 관리하면 된다.
+
+### 유효 기간이 추가된 이력 테이블
+
+```sql
+DROP TABLE IF EXISTS product_history;
+CREATE TABLE product_history (
+    history_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    product_id BIGINT NOT NULL,
+    name VARCHAR(200) NOT NULL,
+    price INT NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    -- 유효 기간
+    valid_from DATETIME NOT NULL,
+    valid_to DATETIME NOT NULL DEFAULT '9999-12-31 23:59:59',
+    -- 기타 컬럼
+    created_at DATETIME NOT NULL,
+    created_by VARCHAR(100) NOT NULL,
+    history_created_by VARCHAR(100) NOT NULL,
+    change_type VARCHAR(50),
+    change_reason VARCHAR(500),
+
+    INDEX idx_product_id_valid_range (product_id, valid_from, valid_to),
+    INDEX idx_valid_range (valid_from, valid_to)
+);
+```
+
+> 참고: 현재 데이터를 조회할 때는 원본 테이블을 직접 확인하면 된다. 따라서 이렇게 원본 테이블과 이력 테이블이 나누어진 경우에는 `is_current` 컬럼을 사용할 필요가 없다.
