@@ -1474,3 +1474,90 @@ CREATE TABLE product_history (
 ```
 
 > 참고: 현재 데이터를 조회할 때는 원본 테이블을 직접 확인하면 된다. 따라서 이렇게 원본 테이블과 이력 테이블이 나누어진 경우에는 `is_current` 컬럼을 사용할 필요가 없다.
+
+### 데이터 등록 및 변경
+
+데이터를 등록하고 두 번 변경한다.
+
+```sql
+-- 1. 최초 등록 (2026-01-15)
+INSERT INTO product_history (product_id, name, price, stock_quantity, status,
+    valid_from, valid_to, created_at, created_by, history_created_by, change_type, change_reason)
+VALUES (1, '스마트폰 케이스', 15000, 100, 'ACTIVE', '2026-01-15 10:00:00',
+    '9999-12-31 23:59:59', '2026-01-15 10:00:00', 'admin_kim', 'admin_kim', 'CREATE', '신규 상품 등록');
+
+INSERT INTO product_history (product_id, name, price, stock_quantity, status,
+    valid_from, valid_to, created_at, created_by, history_created_by, change_type, change_reason)
+VALUES (2, '무선 이어폰', 89000, 50, 'ACTIVE', '2026-01-15 10:05:00',
+    '9999-12-31 23:59:59', '2026-01-15 10:05:00', 'admin_lee', 'admin_lee', 'CREATE', '신규 상품 등록');
+```
+
+> 참고: 원칙적으로 `product` 테이블에도 데이터를 입력하고 변경해야 하지만, 여기서는 예제의 단순함을 위해 `product_history` 테이블만 데이터를 입력하고 변경한다.
+
+**[저장된 데이터]**
+
+| history_id | product_id | name | price | stock_quantity | valid_from | valid_to | change_type |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | 100 | 2026-01-15 10:00:00 | 9999-12-31 23:59:59 | CREATE |
+| 2 | 2 | 무선 이어폰 | 89000 | 50 | 2026-01-15 10:05:00 | 9999-12-31 23:59:59 | CREATE |
+
+최초 입력된 데이터들은 `valid_to`가 `9999-12-31 23:59:59`인 것을 확인할 수 있다. 이 값을 통해 해당 행이 현재 값인 것도 확인할 수 있다.
+
+```sql
+-- 2. 첫 번째 변경 (2026-03-01): 가격 변경
+-- 이전 행의 valid_to 업데이트
+UPDATE product_history
+SET valid_to = '2026-03-01 10:00:00'
+WHERE product_id = 1 AND valid_to = '9999-12-31 23:59:59';
+
+-- 새 행 추가
+INSERT INTO product_history (product_id, name, price, stock_quantity, status,
+    valid_from, valid_to, created_at, created_by, history_created_by, change_type, change_reason)
+VALUES (1, '스마트폰 케이스', 12000, 100, 'ACTIVE', '2026-03-01 10:00:00',
+    '9999-12-31 23:59:59', '2026-01-15 10:00:00', 'admin_kim', 'admin_park', 'PRICE_CHANGE', '봄맞이 할인');
+```
+
+`valid_to`를 데이터 변경 시점에 맞추어 변경해야 한다.
+
+**[저장된 데이터]**
+
+| history_id | product_id | name | price | stock_quantity | valid_from | valid_to | change_type |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 | 100 | 2026-01-15 10:00:00 | 2026-03-01 10:00:00 | CREATE |
+| 2 | 2 | 무선 이어폰 | 89000 | 50 | 2026-01-15 10:05:00 | 9999-12-31 23:59:59 | CREATE |
+| 3 | 1 | 스마트폰 케이스 | 12000 | 100 | 2026-03-01 10:00:00 | 9999-12-31 23:59:59 | PRICE_CHANGE |
+
+`history_id=1`의 `valid_to`가 `9999-12-31 23:59:59`에서 변경 시점인 `2026-03-01 10:00:00`으로 변경되었다.
+
+```sql
+-- 3. 두 번째 변경 (2026-03-15): 재고 조정
+UPDATE product_history
+SET valid_to = '2026-03-15 14:00:00'
+WHERE product_id = 1 AND valid_to = '9999-12-31 23:59:59';
+
+INSERT INTO product_history (product_id, name, price, stock_quantity, status,
+    valid_from, valid_to, created_at, created_by, history_created_by, change_type, change_reason)
+VALUES (1, '스마트폰 케이스', 12000, 95, 'ACTIVE', '2026-03-15 14:00:00',
+    '9999-12-31 23:59:59', '2026-01-15 10:00:00', 'admin_kim', 'warehouse_kim', 'STOCK_ADJUST', '재고 실사');
+```
+
+현재 데이터를 변경할 때는 반드시 이력 테이블의 `valid_to` 값도 변경 시점에 맞추어 함께 변경해야 한다.
+
+최종 이력을 확인한다.
+
+```sql
+SELECT history_id, product_id, price, stock_quantity, valid_from, valid_to, change_type
+FROM product_history
+ORDER BY valid_from;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | price | stock_quantity | valid_from | valid_to | change_type |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 15000 | 100 | 2026-01-15 10:00:00 | 2026-03-01 10:00:00 | CREATE |
+| 2 | 2 | 89000 | 50 | 2026-01-15 10:05:00 | 9999-12-31 23:59:59 | CREATE |
+| 3 | 1 | 12000 | 100 | 2026-03-01 10:00:00 | 2026-03-15 14:00:00 | PRICE_CHANGE |
+| 4 | 1 | 12000 | 95 | 2026-03-15 14:00:00 | 9999-12-31 23:59:59 | STOCK_ADJUST |
+
+`valid_to`가 변경 시점에 맞추어 적절하게 변경된 것을 확인할 수 있다. `valid_to`의 값이 `9999-12-31 23:59:59`이면 현재 데이터다.
