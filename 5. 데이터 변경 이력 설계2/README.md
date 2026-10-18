@@ -1561,3 +1561,22 @@ ORDER BY valid_from;
 | 4 | 1 | 12000 | 95 | 2026-03-15 14:00:00 | 9999-12-31 23:59:59 | STOCK_ADJUST |
 
 `valid_to`가 변경 시점에 맞추어 적절하게 변경된 것을 확인할 수 있다. `valid_to`의 값이 `9999-12-31 23:59:59`이면 현재 데이터다.
+
+### 시점 조회 - 단순해진 쿼리
+
+특정 상품 하나를 조회한다.
+
+```sql
+-- 2026년 3월 10일 기준 가격
+SELECT product_id, name, price, stock_quantity, valid_from, valid_to
+FROM product_history
+WHERE product_id = 1
+  AND '2026-03-10 23:59:59' >= valid_from
+  AND '2026-03-10 23:59:59' < valid_to;
+```
+
+**[실행 결과]**
+
+| product_id | name | price | stock_quantity | valid_from | valid_to |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 스마트폰 케이스 | 12000 | 100 | 2026-03-01 10:00:00 | 2026-03-15 14:00:00 |
