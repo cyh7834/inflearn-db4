@@ -1580,3 +1580,22 @@ WHERE product_id = 1
 | product_id | name | price | stock_quantity | valid_from | valid_to |
 | --- | --- | --- | --- | --- | --- |
 | 1 | 스마트폰 케이스 | 12000 | 100 | 2026-03-01 10:00:00 | 2026-03-15 14:00:00 |
+
+### 전체 통계 - 성능 개선
+
+"2026년 3월 10일 기준, 모든 상품의 총 재고 수량"을 조회한다.
+
+```sql
+SELECT SUM(h.stock_quantity) AS total_stock
+FROM product_history h
+WHERE '2026-03-10 23:59:59' >= h.valid_from
+  AND '2026-03-10 23:59:59' < h.valid_to;
+```
+
+**[실행 결과]**
+
+| total_stock |
+| --- |
+| 150 |
+
+이 경우에도 과거와는 비교할 수 없을 정도로 쿼리가 매우 단순해졌다. 서브쿼리나 조인 없이 단순 `WHERE` 조건만으로 해결된다. 또한 범위 컬럼에 인덱스를 사용해서 성능도 이전과 비교할 수 없을 정도로 빠르다.
