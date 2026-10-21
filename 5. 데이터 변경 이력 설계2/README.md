@@ -1636,3 +1636,20 @@ UPDATE product SET ... WHERE product_id = 1;
 
 COMMIT;
 ```
+
+### 유효 기간 없이 운영하는 방법
+
+물론 유효 기간 없이도 시점 조회는 가능하다. 다만 통계 쿼리가 복잡하고 성능이 느릴 뿐이다.
+
+```sql
+-- valid_from, valid_to 없이 시점 조회
+SELECT h.*
+FROM product_history h
+INNER JOIN (
+    SELECT product_id, MAX(history_id) AS max_id
+    FROM product_history
+    WHERE history_created_at <= '2026-03-10 23:59:59'
+    GROUP BY product_id
+) latest ON h.history_id = latest.max_id
+WHERE h.product_id = 1;
+```
