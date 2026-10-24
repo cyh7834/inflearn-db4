@@ -1691,3 +1691,55 @@ WHERE h.product_id = 1;
 | **트랜잭션 데이터** | 사건 발생, 이력 기록 | 주문, 결제, 로그 | **비권장** | 발생 시점이 중요하며, 데이터 양이 많아 `UPDATE` 비용이 큼 |
 
 실무에서는 이 기준을 바탕으로, 비즈니스 요건에 따라 시점 조회가 꼭 필요한 테이블에만 선별적으로 유효 기간(`valid_from`, `valid_to`)을 도입하는 것이 시스템 복잡도를 낮추는 길이다.
+
+## 전체 행 스냅샷 이력 테이블 - 한계
+
+전체 행 스냅샷 방식은 실무에서 가장 많이 사용하는 패턴이다. 하지만 이 방식에도 분명한 한계가 있다.
+
+### 한계 1: 용량 문제
+
+전체 행 스냅샷은 변경이 발생할 때마다 모든 컬럼의 값을 저장한다. 하나의 컬럼만 변경되어도 전체 행이 복사된다. 예를 들어 상품 테이블에 20개의 컬럼이 있다고 가정하자. 가격 하나만 변경해도 20개 컬럼 전체가 이력 테이블에 저장된다.
+
+```sql
+-- 상품 테이블 예시 (실제로는 더 많은 컬럼이 있을 수 있다)
+CREATE TABLE product_full (
+    product_id BIGINT PRIMARY KEY,
+    name VARCHAR(200),
+    description TEXT,           -- 긴 텍스트
+    price INT,
+    original_price INT,
+    discount_rate DECIMAL(5,2),
+    stock_quantity INT,
+    reserved_quantity INT,
+    category_id BIGINT,
+    brand_id BIGINT,
+    supplier_id BIGINT,
+    weight DECIMAL(10,2),
+    dimensions VARCHAR(100),
+    status VARCHAR(20),
+    display_order INT,
+    created_at DATETIME,
+    created_by VARCHAR(100),
+    updated_at DATETIME,
+    updated_by VARCHAR(100)
+);
+```
+
+> 참고: 설명을 위한 예시이다. 실행하지 말자.
+
+가격만 변경해도 `description`(긴 텍스트) 등 모든 데이터가 복사된다.
+
+**용량 계산 예시**
+
+- 1개 상품 평균 크기: 약 2KB
+- 1개 상품 평균 변경 횟수: 연간 50회
+- 상품 수: 10만 개
+
+**연간 이력 테이블 증가량**
+
+```
+= 2KB × 50회 × 100,000개
+= 10GB / 년
+```
+
+**5년 운영 시** 50GB 이상의 이력 데이터가 쌓인다.
