@@ -1743,3 +1743,25 @@ CREATE TABLE product_full (
 ```
 
 **5년 운영 시** 50GB 이상의 이력 데이터가 쌓인다.
+
+### 한계 2: 불필요한 중복
+
+가격만 변경되었는데 `name` 등 변경되지 않은 값들도 모두 중복 저장된다.
+
+```sql
+-- 이력 테이블 조회
+SELECT history_id, product_id, name, price
+FROM product_history
+WHERE product_id = 1
+ORDER BY history_id;
+```
+
+**[실행 결과]**
+
+| history_id | product_id | name | price |
+| --- | --- | --- | --- |
+| 1 | 1 | 스마트폰 케이스 | 15000 |
+| 3 | 1 | 스마트폰 케이스 | 12000 |
+| 4 | 1 | 스마트폰 케이스 | 10000 |
+
+`name`을 포함한 변경하지 않은 나머지 필드들이 중복으로 저장된다.
