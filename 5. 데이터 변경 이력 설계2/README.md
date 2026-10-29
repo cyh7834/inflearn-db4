@@ -1836,3 +1836,31 @@ GROUP BY change_type;
 ### 아이디어
 
 가격이 변경되면 가격만 저장한다. 재고가 변경되면 재고만 저장한다. 변경되지 않은 컬럼은 저장하지 않는다.
+
+### 테이블 설계
+
+```sql
+DROP TABLE IF EXISTS product_change_log;
+CREATE TABLE product_change_log (
+    log_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    product_id BIGINT NOT NULL,
+    column_name VARCHAR(100) NOT NULL,
+    old_value VARCHAR(1000),
+    new_value VARCHAR(1000),
+    changed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    changed_by VARCHAR(100) NOT NULL,
+    change_reason VARCHAR(500),
+
+    INDEX idx_product_id (product_id),
+    INDEX idx_changed_at (changed_at),
+    INDEX idx_column_name (column_name)
+);
+```
+
+각 컬럼의 의미는 다음과 같다.
+
+| 컬럼 | 의미 |
+| --- | --- |
+| `column_name` | 변경된 컬럼 이름 |
+| `old_value` | 변경 전 값 |
+| `new_value` | 변경 후 값 |
