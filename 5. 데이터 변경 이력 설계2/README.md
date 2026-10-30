@@ -1864,3 +1864,42 @@ CREATE TABLE product_change_log (
 | `column_name` | 변경된 컬럼 이름 |
 | `old_value` | 변경 전 값 |
 | `new_value` | 변경 후 값 |
+
+### 데이터 변경 기록
+
+상품의 가격과 재고를 변경한다.
+
+```sql
+-- 가격 변경: 15000 → 12000
+INSERT INTO product_change_log (product_id, column_name, old_value, new_value, changed_by, changed_at, change_reason)
+VALUES (1, 'price', '15000', '12000', 'admin_park', '2026-03-01 10:00:00', '봄맞이 할인 이벤트');
+
+-- 재고 변경: 100 → 95
+INSERT INTO product_change_log (product_id, column_name, old_value, new_value, changed_by, changed_at, change_reason)
+VALUES (1, 'stock_quantity', '100', '95', 'warehouse_kim', '2026-03-15 14:00:00', '재고 실사 - 5개 파손');
+
+-- 상태 변경: ACTIVE → INACTIVE
+INSERT INTO product_change_log (product_id, column_name, old_value, new_value, changed_by, changed_at, change_reason)
+VALUES (1, 'status', 'ACTIVE', 'INACTIVE', 'admin_lee', '2026-04-01 10:00:00', '제조사 단종 통보');
+```
+
+> 참고: `product` 테이블의 내용도 변경했다고 가정하자.
+
+변경 로그를 확인한다.
+
+```sql
+SELECT log_id, product_id, column_name, old_value, new_value, changed_at, changed_by
+FROM product_change_log
+WHERE product_id = 1
+ORDER BY changed_at;
+```
+
+**[실행 결과]**
+
+| log_id | product_id | column_name | old_value | new_value | changed_at | changed_by |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | price | 15000 | 12000 | 2026-03-01 10:00:00 | admin_park |
+| 2 | 1 | stock_quantity | 100 | 95 | 2026-03-15 14:00:00 | warehouse_kim |
+| 3 | 1 | status | ACTIVE | INACTIVE | 2026-04-01 10:00:00 | admin_lee |
+
+`column_name` 컬럼을 통해 어떤 컬럼의 값이 변경되었는지 확인할 수 있다. `old_value`, `new_value` 필드를 통해 이전 값과 변경된 값을 확인할 수 있다.
