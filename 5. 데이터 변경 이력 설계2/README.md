@@ -1903,3 +1903,30 @@ ORDER BY changed_at;
 | 3 | 1 | status | ACTIVE | INACTIVE | 2026-04-01 10:00:00 | admin_lee |
 
 `column_name` 컬럼을 통해 어떤 컬럼의 값이 변경되었는지 확인할 수 있다. `old_value`, `new_value` 필드를 통해 이전 값과 변경된 값을 확인할 수 있다.
+
+### 장점
+
+**장점 1: 용량 절약**
+
+변경된 컬럼만 저장하므로 용량이 크게 줄어든다.
+
+- 전체 행 스냅샷: 모든 컬럼 저장 (20개 컬럼 × 3번 변경 = 60개 값)
+- 컬럼 단위 로그: 변경된 컬럼만 저장 (3개 값)
+
+**장점 2: 무엇이 변경되었는지 명확하다**
+
+각 로그가 "어떤 컬럼이 어떻게 변경되었는지"를 명확히 보여준다.
+
+```sql
+SELECT column_name, old_value, new_value, change_reason
+FROM product_change_log
+WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| column_name | old_value | new_value | change_reason |
+| --- | --- | --- | --- |
+| price | 15000 | 12000 | 봄맞이 할인 이벤트 |
+| stock_quantity | 100 | 95 | 재고 실사 - 5개 파손 |
+| status | ACTIVE | INACTIVE | 제조사 단종 통보 |
