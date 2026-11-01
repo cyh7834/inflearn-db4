@@ -1930,3 +1930,89 @@ WHERE product_id = 1;
 | price | 15000 | 12000 | 봄맞이 할인 이벤트 |
 | stock_quantity | 100 | 95 | 재고 실사 - 5개 파손 |
 | status | ACTIVE | INACTIVE | 제조사 단종 통보 |
+
+### 심각한 단점
+
+**단점 1: 특정 시점의 전체 상태를 복원하기 어렵다**
+
+"2026년 3월 20일 기준 상품 ID 1의 전체 정보"를 조회하려면 어떻게 해야 할까?
+
+```sql
+-- 각 컬럼별로 해당 시점의 값을 찾아야 한다
+-- 매우 복잡한 쿼리가 필요하다
+
+-- price 값 찾기
+SELECT new_value FROM product_change_log
+WHERE product_id = 1 AND column_name = 'price'
+  AND changed_at <= '2026-03-20'
+ORDER BY changed_at DESC LIMIT 1;
+
+-- stock_quantity 값 찾기
+SELECT new_value FROM product_change_log
+WHERE product_id = 1 AND column_name = 'stock_quantity'
+  AND changed_at <= '2026-03-20'
+ORDER BY changed_at DESC LIMIT 1;
+
+-- status 값 찾기
+SELECT new_value FROM product_change_log
+WHERE product_id = 1 AND column_name = 'status'
+  AND changed_at <= '2026-03-20'
+ORDER BY changed_at DESC LIMIT 1;
+
+-- 모든 컬럼에 대해 반복해야 한다...
+```
+
+**[실행 결과] - price**
+
+| new_value |
+| --- |
+| 12000 |
+
+**[실행 결과] - stock_quantity**
+
+| new_value |
+| --- |
+| 95 |
+
+**[실행 결과] - status**
+
+| new_value |
+| --- |
+| null |
+
+컬럼이 20개라면 20번의 서브쿼리가 필요하다. 실용적이지 않다.
+
+**단점 2: 통계 쿼리가 매우 어렵다**
+
+"2026년 3월 20일 기준 전체 상품의 총 재고"를 구하려면?
+
+- 각 상품별로 해당 시점의 `stock_quantity`를 찾아야 한다.
+- 변경 이력이 없는 상품은 원본 테이블에서 가져와야 한다.
+- 매우 복잡하고 성능도 나쁘다.
+
+**단점 3: 타입 정보가 손실된다**
+
+모든 값이 `VARCHAR`로 저장되므로 원래 타입 정보가 손실된다.
+
+```sql
+-- price는 원래 INT지만 VARCHAR로 저장된다
+-- 숫자 비교, 연산이 어려워진다
+SELECT * FROM product_change_log
+WHERE column_name = 'price'
+  AND CAST(new_value AS SIGNED) > 10000;  -- 타입 변환 필요(MySQL은 묵시적 형변환 가능)
+```
+
+**단점 4: 첫 데이터 처리가 복잡하다**
+
+로그 테이블만 있으면 과거의 어떤 시점이든 완벽하게 복구할 수 있어야 한다는 가정이 있다면 다음과 같이 복잡한 운영 방식이 요구된다. 이 경우 첫 등록 시에는 모든 컬럼의 값을 로그로 기록해야 한다. 그렇지 않으면 로그 테이블을 통해 초기 값을 알 수 없다.
+
+```sql
+-- 첫 등록 시 모든 컬럼을 기록해야 한다
+INSERT INTO product_change_log (product_id, column_name, old_value, new_value, changed_by)
+VALUES (1, 'name', NULL, '스마트폰 케이스', 'admin_kim');
+INSERT INTO product_change_log (product_id, column_name, old_value, new_value, changed_by)
+VALUES (1, 'price', NULL, '15000', 'admin_kim');
+INSERT INTO product_change_log (product_id, column_name, old_value, new_value, changed_by)
+VALUES (1, 'stock_quantity', NULL, '100', 'admin_kim');
+-- ... 20개 컬럼이면 20개의 INSERT
+```
