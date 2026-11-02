@@ -2016,3 +2016,40 @@ INSERT INTO product_change_log (product_id, column_name, old_value, new_value, c
 VALUES (1, 'stock_quantity', NULL, '100', 'admin_kim');
 -- ... 20개 컬럼이면 20개의 INSERT
 ```
+
+### JSON 방식의 변형
+
+컬럼 단위 대신 변경된 내용을 JSON으로 저장하는 방식도 있다.
+
+```sql
+DROP TABLE IF EXISTS product_change_log_json;
+CREATE TABLE product_change_log_json (
+    log_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    product_id BIGINT NOT NULL,
+    changes JSON NOT NULL,
+    changed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    changed_by VARCHAR(100) NOT NULL,
+
+    INDEX idx_product_id (product_id)
+);
+
+-- 변경 내용을 JSON으로 저장
+INSERT INTO product_change_log_json (product_id, changes, changed_by)
+VALUES (1, '{"price": {"old": 15000, "new": 12000}, "stock_quantity": {"old": 100, "new": 95}}', 'admin_park');
+```
+
+```sql
+SELECT log_id, product_id, changes
+FROM product_change_log_json
+WHERE product_id = 1;
+```
+
+**[실행 결과]**
+
+| log_id | product_id | changes |
+| --- | --- | --- |
+| 1 | 1 | {"price": {"old": 15000, "new": 12000}, "stock_quantity": {"old": 100, "new": 95}} |
+
+JSON 방식은 한 번의 변경에서 여러 컬럼이 변경된 경우를 하나의 행으로 관리할 수 있다. 하지만 특정 시점 복원, 통계 쿼리 등의 문제는 여전히 남아 있다.
+
+> 참고: JSON에 대한 부분은 뒤에서 자세히 설명한다. 지금은 JSON이라는 형식을 사용해서 데이터를 한 줄에 저장하는 것도 가능하구나 정도만 알아두자.
