@@ -2113,3 +2113,38 @@ JSON 방식은 한 번의 변경에서 여러 컬럼이 변경된 경우를 하�
 ### 아이디어
 
 시스템에 상품 테이블, 주문 테이블, 회원 테이블 등 여러 테이블이 있다. 각 테이블마다 이력 테이블을 만드는 대신, 하나의 공통 이력 테이블에서 모든 변경을 추적한다.
+
+### 테이블 설계
+
+```sql
+DROP TABLE IF EXISTS audit_log;
+CREATE TABLE audit_log (
+    audit_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    table_name VARCHAR(100) NOT NULL,
+    record_id VARCHAR(100) NOT NULL,
+    action VARCHAR(20) NOT NULL,
+    old_data JSON,
+    new_data JSON,
+    changed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    changed_by VARCHAR(100) NOT NULL,
+    source_system VARCHAR(50),
+    client_ip VARCHAR(50),
+    request_id VARCHAR(100),
+
+    INDEX idx_table_record (table_name, record_id),
+    INDEX idx_changed_at (changed_at),
+    INDEX idx_changed_by (changed_by)
+);
+```
+
+각 컬럼의 의미는 다음과 같다.
+
+| 컬럼 | 의미 |
+| --- | --- |
+| `table_name` | 변경이 발생한 테이블 이름 |
+| `record_id` | 변경된 레코드의 ID (Primary Key 값) |
+| `action` | 변경 유형 (INSERT, UPDATE, DELETE) |
+| `old_data` | 변경 전 데이터 (JSON) |
+| `new_data` | 변경 후 데이터 (JSON) |
+
+> 참고: JSON에 대한 부분은 뒤에서 자세히 설명한다. 지금은 JSON이라는 형식을 사용해서 데이터를 한 줄에 저장하는 것도 가능하구나 정도만 알아두자.
