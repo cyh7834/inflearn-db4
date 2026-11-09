@@ -2148,3 +2148,48 @@ CREATE TABLE audit_log (
 | `new_data` | 변경 후 데이터 (JSON) |
 
 > 참고: JSON에 대한 부분은 뒤에서 자세히 설명한다. 지금은 JSON이라는 형식을 사용해서 데이터를 한 줄에 저장하는 것도 가능하구나 정도만 알아두자.
+
+### 데이터 등록 로그
+
+```sql
+-- 상품 등록
+INSERT INTO audit_log (table_name, record_id, action, old_data, new_data, changed_by, changed_at, source_system)
+VALUES (
+    'product',
+    '1',
+    'INSERT',
+    NULL,
+    '{"product_id": 1, "name": "스마트폰 케이스", "price": 15000, "stock_quantity": 100}',
+    'admin_kim',
+    '2026-03-15 10:00:00',
+    'WEB_ADMIN'
+);
+
+-- 주문 등록
+INSERT INTO audit_log (table_name, record_id, action, old_data, new_data, changed_by, changed_at, source_system)
+VALUES (
+    'orders',
+    '1001',
+    'INSERT',
+    NULL,
+    '{"order_id": 1001, "member_id": 100, "total_amount": 15000, "status": "PENDING"}',
+    'member_100',
+    '2026-03-15 14:30:00',
+    'WEB_USER'
+);
+
+-- 회원 정보 수정
+INSERT INTO audit_log (table_name, record_id, action, old_data, new_data, changed_by, changed_at, source_system)
+VALUES (
+    'member',
+    '100',
+    'UPDATE',
+    '{"member_id": 100, "name": "홍길동", "email": "hong@old.com"}',
+    '{"member_id": 100, "name": "홍길동", "email": "hong@new.com"}',
+    'member_100',
+    '2026-03-15 15:00:00',
+    'MOBILE_APP'
+);
+```
+
+상품 등록, 주문 등록, 회원 정보 수정 등 모든 데이터의 이력을 하나의 테이블에서 관리한다. `table_name`을 통해 구분할 수 있다.
