@@ -2193,3 +2193,65 @@ VALUES (
 ```
 
 상품 등록, 주문 등록, 회원 정보 수정 등 모든 데이터의 이력을 하나의 테이블에서 관리한다. `table_name`을 통해 구분할 수 있다.
+
+### 데이터 조회
+
+**전체 감사 로그 조회**
+
+```sql
+SELECT audit_id, table_name, record_id, action, changed_at, changed_by, source_system
+FROM audit_log
+ORDER BY changed_at DESC;
+```
+
+**[실행 결과]**
+
+| audit_id | table_name | record_id | action | changed_at | changed_by | source_system |
+| --- | --- | --- | --- | --- | --- | --- |
+| 3 | member | 100 | UPDATE | 2026-03-15 15:00:00 | member_100 | MOBILE_APP |
+| 2 | orders | 1001 | INSERT | 2026-03-15 14:30:00 | member_100 | WEB_USER |
+| 1 | product | 1 | INSERT | 2026-03-15 10:00:00 | admin_kim | WEB_ADMIN |
+
+모든 테이블의 변경 이력을 한 곳에서 볼 수 있다.
+
+**특정 테이블의 이력 조회**
+
+```sql
+-- 상품 테이블의 변경 이력
+SELECT audit_id, record_id, action, new_data, changed_at, changed_by
+FROM audit_log
+WHERE table_name = 'product'
+ORDER BY changed_at;
+```
+
+**[실행 결과]**
+
+| audit_id | record_id | action | new_data | changed_at | changed_by |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 1 | INSERT | {"product_id": 1, "name": "스마트폰 케이스", "price": 15000...} | 2026-03-15 10:00:00 | admin_kim |
+
+**특정 레코드의 이력 조회**
+
+```sql
+-- 상품 1번의 변경 이력
+SELECT audit_id, action, old_data, new_data, changed_at, changed_by
+FROM audit_log
+WHERE table_name = 'product' AND record_id = '1'
+ORDER BY changed_at;
+```
+
+**특정 사용자의 모든 활동 조회**
+
+```sql
+-- admin_kim이 변경한 모든 내역
+SELECT audit_id, table_name, record_id, action, changed_at
+FROM audit_log
+WHERE changed_by = 'admin_kim'
+ORDER BY changed_at DESC;
+```
+
+**[실행 결과]**
+
+| audit_id | table_name | record_id | action | changed_at |
+| --- | --- | --- | --- | --- |
+| 1 | product | 1 | INSERT | 2026-03-15 10:00:00 |
